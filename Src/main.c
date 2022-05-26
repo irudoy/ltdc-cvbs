@@ -56,7 +56,7 @@ static void MX_SPI5_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint16_t i, j;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -84,7 +84,17 @@ int main(void)
   ILI9341_init();
 
   HAL_LTDC_SetAddress(&hltdc, (uint32_t) &RGB565_320x240, 0);
-  TFT_FillScreen((uint32_t) 0xF402);
+
+  /**
+   * For 16 bpp colors the color format is RGB565.
+   * That is 5 bits for red, 6 bits for green, 5 bits for blue.
+   * As we have 5 bits for red, fully lit is 31
+   */
+  uint16_t brightPurpleRGB565 = 31 << 11 | 0 << 5 | 31 << 0;
+
+  TFT_FillScreen((uint32_t) brightPurpleRGB565);
+  HAL_Delay(1000);
+  TFT_FillScreen(0);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -94,6 +104,49 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    for (i = 0; i < 10000; i++) {
+      for(j = 0; j < 100; j++) {
+        TFT_DrawPixel(
+          HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_WIDTH,
+          HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_HEIGHT,
+          0
+        );
+      }
+
+      TFT_DrawPixel(
+        HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_WIDTH,
+        HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_HEIGHT,
+        (uint16_t)HAL_RNG_GetRandomNumber(&hrng)
+      );
+
+      HAL_Delay(1);
+    }
+
+    TFT_FillScreen(0);
+    HAL_Delay(1000);
+
+    for (i = 0; i < 1000; i++) {
+      TFT_FillRect(
+        HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_WIDTH,
+        HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_HEIGHT,
+        HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_WIDTH,
+        HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_HEIGHT,
+        (uint16_t)HAL_RNG_GetRandomNumber(&hrng)
+      );
+
+      HAL_Delay(10);
+    }
+
+    TFT_FillScreen(0);
+    HAL_Delay(1000);
+
+    for (i = 0; i < 5; i++) {
+      TFT_FillScreen((uint16_t)HAL_RNG_GetRandomNumber(&hrng));
+      HAL_Delay(750);
+    }
+
+    TFT_FillScreen(0);
+    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }

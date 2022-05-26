@@ -1,6 +1,6 @@
 #define DISPLAY_WIDTH   240
 #define DISPLAY_HEIGHT  320
-#define BPP               3
+//#define BPP               3 // unused?
 
 void ILI9341_init(void);
 void ILI9341_set_window(int x, int y, int width, int height);
