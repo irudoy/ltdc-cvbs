@@ -7,6 +7,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "ltdc.h"
+#include "picture.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -85,6 +86,8 @@ int main(void)
 
   HAL_LTDC_SetAddress(&hltdc, (uint32_t) &RGB565_320x240, 0);
 
+  init_fox_240x320();
+
   /**
    * For 16 bpp colors the color format is RGB565.
    * That is 5 bits for red, 6 bits for green, 5 bits for blue.
@@ -104,6 +107,14 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    TFT_DrawBitmap(get_fox_240x320());
+    HAL_Delay(10000);
+
+    return;
+
+    TFT_FillScreen(0);
+    HAL_Delay(1000);
+
     for (i = 0; i < 10000; i++) {
       for(j = 0; j < 100; j++) {
         TFT_DrawPixel(
