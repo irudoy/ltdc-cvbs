@@ -1,11 +1,11 @@
 /* USER CODE BEGIN Header */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <ili9341-mod.h>
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <ili9341-mod.h>
 #include "ltdc.h"
 #include "picture.h"
 /* USER CODE END Includes */
@@ -109,8 +109,6 @@ int main(void)
     /* USER CODE BEGIN 3 */
     TFT_DrawBitmap(get_fox_240x320());
     HAL_Delay(10000);
-
-    return;
 
     TFT_FillScreen(0);
     HAL_Delay(1000);
@@ -258,8 +256,8 @@ static void MX_LTDC_Init(void)
   pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
   pLayerCfg.Alpha = 255;
   pLayerCfg.Alpha0 = 0;
-  pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_CA;
-  pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_CA;
+  pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_PAxCA;
+  pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_PAxCA;
   pLayerCfg.FBStartAdress = 0;
   pLayerCfg.ImageWidth = 240;
   pLayerCfg.ImageHeight = 320;
