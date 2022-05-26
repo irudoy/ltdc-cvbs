@@ -131,9 +131,54 @@ void ILI9341_init(void)
   ILI9341_write_data(0x27);
   ILI9341_write_data(0x04);
 
+  ILI9341_write_command(ILI9341_PUMP_RATIO_CONTROL);	// Pump Ratio Control
+  ILI9341_write_data(0x20);
+
+  ILI9341_write_command(ILI9341_NORMAL_MODE_ON);
+
   /* select pixel data format*/
   ILI9341_write_command(ILI9341_PIXEL_FORMAT_SET);
-  ILI9341_write_data(0x66);
+  ILI9341_write_data(0x55); // 0x55 - 16 bit Format; 0x66 - 18 bit Format
+
+  ILI9341_write_command(ILI9341_3GAMMA_ENABLE); // 3Gamma Function Disable
+  ILI9341_write_data(0x00);
+
+  ILI9341_write_command(ILI9341_GAMMA_REGISTER); // Gamma Curve selected
+  ILI9341_write_data(0x01);
+
+  ILI9341_write_command(ILI9341_POSITIVE_GAMMA_CORRECTION); // Positive Gamma Correction
+  ILI9341_write_data(0x0F);
+  ILI9341_write_data(0x31);
+  ILI9341_write_data(0x2B);
+  ILI9341_write_data(0x0C);
+  ILI9341_write_data(0x0E);
+  ILI9341_write_data(0x08);
+  ILI9341_write_data(0x4E);
+  ILI9341_write_data(0xF1);
+  ILI9341_write_data(0x37);
+  ILI9341_write_data(0x07);
+  ILI9341_write_data(0x10);
+  ILI9341_write_data(0x03);
+  ILI9341_write_data(0x0E);
+  ILI9341_write_data(0x09);
+  ILI9341_write_data(0x00);
+
+  ILI9341_write_command(ILI9341_NEGATIVE_GAMMA_CORRECTION); // Negative Gamma Correction
+  ILI9341_write_data(0x00);
+  ILI9341_write_data(0x0E);
+  ILI9341_write_data(0x14);
+  ILI9341_write_data(0x03);
+  ILI9341_write_data(0x11);
+  ILI9341_write_data(0x07);
+  ILI9341_write_data(0x31);
+  ILI9341_write_data(0xC1);
+  ILI9341_write_data(0x48);
+  ILI9341_write_data(0x08);
+  ILI9341_write_data(0x0F);
+  ILI9341_write_data(0x0C);
+  ILI9341_write_data(0x31);
+  ILI9341_write_data(0x36);
+  ILI9341_write_data(0x0F);
 
   /* configure RGB interface */
   ILI9341_write_command(ILI9341_RGB_INTERFACE_CONTROL);
