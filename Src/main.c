@@ -5,9 +5,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <ili9341-mod.h>
+#include "ili9341-mod.h"
 #include "ltdc.h"
 #include "picture.h"
+#include "IS42S16400J.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,7 +35,7 @@ SPI_HandleTypeDef hspi5;
 SDRAM_HandleTypeDef hsdram1;
 
 /* USER CODE BEGIN PV */
-volatile uint32_t RGB565_320x240[38400] = {0x00000000};
+#define LCD_FRAME_BUFFER SDRAM_BANK_ADDR
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -50,7 +51,6 @@ static void MX_FMC_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 /**
@@ -85,9 +85,11 @@ int main(void)
   MX_SPI5_Init();
   MX_FMC_Init();
   /* USER CODE BEGIN 2 */
+  IS42S16400J_Init(&hsdram1);
+
   ILI9341_init();
 
-  HAL_LTDC_SetAddress(&hltdc, (uint32_t) &RGB565_320x240, 0);
+  HAL_LTDC_SetAddress(&hltdc, LCD_FRAME_BUFFER, LTDC_LAYER_1);
 
   init_fox_240x320();
 
@@ -112,6 +114,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    TFT_FillScreen(redRGB565);
+    HAL_Delay(1000);
+    TFT_FillScreen(greenRGB565);
+    HAL_Delay(1000);
+    TFT_FillScreen(blueRGB565);
+    HAL_Delay(1000);
+
     TFT_DrawBitmap(get_fox_240x320());
     HAL_Delay(10000);
 
@@ -141,13 +150,7 @@ int main(void)
       HAL_Delay(10);
     }
 
-    HAL_Delay(2000);
-    TFT_FillScreen(redRGB565);
     HAL_Delay(1000);
-    TFT_FillScreen(greenRGB565);
-    HAL_Delay(1000);
-    TFT_FillScreen(blueRGB565);
-    HAL_Delay(2000);
 
     for (uint16_t i = 0; i < 5; i++) {
       TFT_FillScreen((uint16_t)HAL_RNG_GetRandomNumber(&hrng));

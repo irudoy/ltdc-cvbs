@@ -3,7 +3,6 @@
 
 #define swap(a, b) { int16_t t = a; a = b; b = t; }
 
-extern volatile uint32_t RGB565_320x240[38400];
 extern LTDC_HandleTypeDef hltdc;
 
 void TFT_FillScreen(uint32_t color) {
