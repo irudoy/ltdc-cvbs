@@ -57,7 +57,6 @@ static void MX_SPI5_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint16_t i, j;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -94,10 +93,12 @@ int main(void)
    * As we have 5 bits for red, fully lit is 31
    */
   uint16_t brightPurpleRGB565 = 31 << 11 | 0 << 5 | 31 << 0;
+  uint16_t redRGB565 = 31 << 11 | 0 << 5 | 0 << 0;
+  uint16_t greenRGB565 = 0 << 11 | 31 << 5 | 0 << 0;
+  uint16_t blueRGB565 = 0 << 11 | 0 << 5 | 31 << 0;
 
   TFT_FillScreen((uint32_t) brightPurpleRGB565);
   HAL_Delay(1000);
-  TFT_FillScreen(0);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -110,31 +111,21 @@ int main(void)
     TFT_DrawBitmap(get_fox_240x320());
     HAL_Delay(10000);
 
-    TFT_FillScreen(0);
-    HAL_Delay(1000);
-
-    for (i = 0; i < 10000; i++) {
-      for(j = 0; j < 100; j++) {
+    for (uint16_t i = 0; i < 10000; i++) {
+      for (uint16_t j = 0; j < 25; j++) {
         TFT_DrawPixel(
           HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_WIDTH,
           HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_HEIGHT,
-          0
+          (uint16_t)HAL_RNG_GetRandomNumber(&hrng)
         );
       }
-
-      TFT_DrawPixel(
-        HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_WIDTH,
-        HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_HEIGHT,
-        (uint16_t)HAL_RNG_GetRandomNumber(&hrng)
-      );
 
       HAL_Delay(1);
     }
 
-    TFT_FillScreen(0);
     HAL_Delay(1000);
 
-    for (i = 0; i < 1000; i++) {
+    for (uint16_t i = 0; i < 1000; i++) {
       TFT_FillRect(
         HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_WIDTH,
         HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_HEIGHT,
@@ -146,15 +137,19 @@ int main(void)
       HAL_Delay(10);
     }
 
-    TFT_FillScreen(0);
+    HAL_Delay(2000);
+    TFT_FillScreen(redRGB565);
     HAL_Delay(1000);
+    TFT_FillScreen(greenRGB565);
+    HAL_Delay(1000);
+    TFT_FillScreen(blueRGB565);
+    HAL_Delay(2000);
 
-    for (i = 0; i < 5; i++) {
+    for (uint16_t i = 0; i < 5; i++) {
       TFT_FillScreen((uint16_t)HAL_RNG_GetRandomNumber(&hrng));
       HAL_Delay(750);
     }
 
-    TFT_FillScreen(0);
     HAL_Delay(1000);
   }
   /* USER CODE END 3 */
