@@ -7,8 +7,11 @@
 /* USER CODE BEGIN Includes */
 #include "ili9341-mod.h"
 #include "ltdc.h"
-#include "picture.h"
 #include "IS42S16400J.h"
+
+#include "picture.h"
+#include "screen_mfd_multi.h"
+#include "screen_mfd_single.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,6 +95,8 @@ int main(void)
   HAL_LTDC_SetAddress(&hltdc, LCD_FRAME_BUFFER, LTDC_LAYER_1);
 
   init_fox_240x320();
+  init_screen_mfd_multi_240x320();
+  init_screen_mfd_single_240x320();
 
   /**
    * For 16 bpp colors the color format is RGB565.
@@ -123,6 +128,13 @@ int main(void)
 
     TFT_DrawBitmap(get_fox_240x320());
     HAL_Delay(10000);
+
+    TFT_DrawBitmap(get_screen_mfd_multi_240x320());
+    HAL_Delay(10000);
+
+    TFT_DrawBitmap(get_screen_mfd_single_240x320());
+    HAL_Delay(10000);
+
 
     for (uint16_t i = 0; i < 10000; i++) {
       for (uint16_t j = 0; j < 25; j++) {
