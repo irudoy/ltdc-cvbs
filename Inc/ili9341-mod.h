@@ -1,5 +1,5 @@
-#define DISPLAY_WIDTH   240
-#define DISPLAY_HEIGHT  320
+#define DISPLAY_WIDTH   hltdc.LayerCfg[0].ImageWidth
+#define DISPLAY_HEIGHT  hltdc.LayerCfg[0].ImageHeight
 //#define BPP               3 // unused?
 
 void ILI9341_init(void);

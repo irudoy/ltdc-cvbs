@@ -1,6 +1,8 @@
 #include <ili9341-mod.h>
 #include <stm32f4xx_hal.h>
 
+extern LTDC_HandleTypeDef hltdc;
+
 #define SELECT()      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET)
 #define DESELECT()    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_SET)
 #define COMMAND()     HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET)
