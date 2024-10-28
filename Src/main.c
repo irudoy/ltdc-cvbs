@@ -8,10 +8,13 @@
 #include "ili9341-mod.h"
 #include "ltdc.h"
 #include "IS42S16400J.h"
+#include "adv7393.h"
 
 #include "screen_mfd_single_317_186.h"
 #include "screen_mfd_multi_317_185.h"
 #include "picture.h"
+#include "philips_pm5544_320_240.h"
+#include "smpte_color_bars_320_240.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -22,7 +25,6 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define LCD_FRAME_BUFFER SDRAM_BANK_ADDR
-#define I2C3_TIMEOUT_MAX 0x3000 /*<! The value of the maximal timeout for I2C waiting loops */
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -64,14 +66,11 @@ static void MX_SPI5_Init(void);
 static void MX_FMC_Init(void);
 static void MX_I2C3_Init(void);
 /* USER CODE BEGIN PFP */
-static uint8_t I2C3_ReadData(uint8_t Addr, uint8_t Reg);
-static void I2C3_WriteData(uint8_t Addr, uint8_t Reg, uint8_t Value);
 static void drawRects(uint16_t w, uint16_t h, uint8_t step);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint32_t I2c3Timeout = I2C3_TIMEOUT_MAX; /*<! Value of Timeout when I2C communication fails */
 /* USER CODE END 0 */
 
 /**
@@ -109,72 +108,16 @@ int main(void)
   MX_I2C3_Init();
   /* USER CODE BEGIN 2 */
   IS42S16400J_Init(&hsdram1);
-
   ILI9341_init();
-
-  // SW RST
-  I2C3_WriteData(0x54, 0x17, 0b00000010);
-
-  // SD Mode Register 1
-  I2C3_WriteData(0x54, 0x80, 0x10); // 0b00010000
-  // SD standard - NTSC
-  // SD luma filter - Luma SSAF
-  // SD chroma filter - 1.3 MHz
-
-  // SD Mode Register 2 (0x0B 0b00001011)
-  I2C3_WriteData(0x54, 0x82, 0b01001010);
-  // SD PrPb SSAF filter - Enabled
-  // SD DAC Output 1 - 1
-  // SD pedestal - Enabled
-  // SD square pixel mode - Disabled
-  // SD VCR FF/RW sync - Disabled
-  // SD pixel data valid - Disabled
-  // SD active video edge control - Disabled
-
-  // SD Mode Register 3
-  I2C3_WriteData(0x54, 0x83, 0x04);
-  // SD pedestal YPrPb output - No pedestal on YPrPb
-  // SD Output Levels Y - Y = 700 mV/300 mV
-  // SD Output Levels PrPb - 700 mV p-p
-  // SD vertical blanking interval (VBI) open - Disabled
-  // SD closed captioning field control - Closed captioning disabled
-
-  // SD Mode Register 4
-  I2C3_WriteData(0x54, 0x84, 0b00000000);
-  // SD SFL/SCR/TR mode select - Disabled
-  // SD active video length - 720 pixels
-  // SD chroma - Chroma enabled
-  // SD burst - Enabled
-  // SD color bars - Disabled
-  // SD luma/chroma swap - DAC 2 = luma, DAC 3 = chroma
-
-  // SD Mode Register 5 (0x02 0b00000010)
-  I2C3_WriteData(0x54, 0x86, 0b00000010);
-  // NTSC color subcarrier adjust - 5.59 μs (must be set for Macrovision compliance)
-  // SD EIA/CEA-861B synchronization compliance - Disabled
-  // SD horizontal/vertical counter mode (1) - Update field/line counter
-  // SD RGB color swap - Normal
-
-  /* (1) When set to 0, the horizontal/vertical counters automatically wrap around at the end of the line/field/frame of the selected standard. When set to 1, the
-horizontal/vertical counters are free running and wrap around when external sync signals indicate to do so. */
-
-  // SD Mode Register 6
-  I2C3_WriteData(0x54, 0x87, 0x80); // 0b10100000 0xA0 (autodetect) // 0b10000000 0x80 (def)
-  // SD Mode Register 7
-  I2C3_WriteData(0x54, 0x88, 0b00010010); // 0b00010010 0x12 (non-interlaced) // 0b00010000 0x10 (interlaced)
-  // SD Mode Register 8
-  I2C3_WriteData(0x54, 0x8A, 0b00001100); // Mode 2 — Slave Option (Subaddress 0x8A = X X X X X 1 0 0)
-
-  // Color bars
-//      I2C3_WriteData(0x54, 0x00, 0b00010010);
-//      I2C3_WriteData(0x54, 0x82, 0b11001011); // 0b00001011 (reset) // 0b11001011 (bars)
-//      I2C3_WriteData(0x54, 0x84, 0b01000000); // 0b00000000 (reset) // 0b01000000 (bars)
+  adv7393_init();
 
   HAL_LTDC_SetAddress(&hltdc, LCD_FRAME_BUFFER, LTDC_LAYER_1);
 
   init_screen_mfd_single_317x186();
   init_screen_mfd_multi_317_185();
   init_fox_240x320();
+  init_philips_pm5544_320_240();
+  init_smpte_color_bars_320_240();
 
   /* USER CODE END 2 */
 
@@ -201,6 +144,12 @@ horizontal/vertical counters are free running and wrap around when external sync
     TFT_FillScreen(blueRGB565);
     HAL_Delay(500);
 
+    TFT_FillScreen(blackRGB565);
+    TFT_DrawBitmap(get_philips_pm5544_320_240(), 320, 240, 0, 1);
+    HAL_Delay(5000);
+    TFT_FillScreen(blackRGB565);
+    TFT_DrawBitmap(get_smpte_color_bars_320_240(), 320, 240, 0, 1);
+    HAL_Delay(5000);
     TFT_FillScreen(blackRGB565);
     TFT_DrawBitmap(get_screen_mfd_single_317x186(), 317, 186, 0, 1);
     HAL_Delay(5000);
@@ -641,49 +590,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-/**
-  * @brief  Writes a value in a register of the device through BUS.
-  * @param  Addr: Device address on BUS Bus.
-  * @param  Reg: The target register address to write
-  * @param  Value: The target register value to be written
-  */
-static void I2C3_WriteData(uint8_t Addr, uint8_t Reg, uint8_t Value)
-{
-  HAL_StatusTypeDef status = HAL_OK;
-
-  status = HAL_I2C_Mem_Write(&hi2c3, Addr, (uint16_t)Reg, I2C_MEMADD_SIZE_8BIT, &Value, 1, I2c3Timeout);
-
-  /* Check the communication status */
-  if(status != HAL_OK)
-  {
-    /* Re-Initialize the BUS */
-    //I2Cx_Error();
-  }
-}
-
-/**
-  * @brief  Reads a register of the device through BUS.
-  * @param  Addr: Device address on BUS Bus.
-  * @param  Reg: The target register address to write
-  * @retval Data read at register address
-  */
-static uint8_t I2C3_ReadData(uint8_t Addr, uint8_t Reg)
-{
-  HAL_StatusTypeDef status = HAL_OK;
-  uint8_t value = 0;
-
-  status = HAL_I2C_Mem_Read(&hi2c3, Addr, Reg, I2C_MEMADD_SIZE_8BIT, &value, 1, I2c3Timeout);
-
-  /* Check the communication status */
-  if(status != HAL_OK)
-  {
-    /* Re-Initialize the BUS */
-    //I2Cx_Error();
-
-  }
-  return value;
-}
-
 static void drawRects(uint16_t w, uint16_t h, uint8_t step) {
   uint16_t colors[5] = {redRGB565, greenRGB565, blueRGB565, whiteRGB565, blackRGB565};
   uint8_t colorIndex = 0;
