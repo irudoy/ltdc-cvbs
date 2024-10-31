@@ -1,19 +1,24 @@
 #include "adv7393.h"
-#include "i2c.h"
 
 #define COLOR_BARS 0
-
+#define I2C_TIMEOUT_MAX 0x3000
 #define MB(byte, val, pos, len) (((byte) & ~(((1U << (len)) - 1) << (pos))) | (((val) & ((1U << (len)) - 1)) << (pos)))
 
+static I2C_HandleTypeDef *hi2c;
+
 static uint8_t read(uint8_t reg) {
-  return I2C_ReadData(ADV7393_I2C_ADDR_R, reg);
+  uint8_t value = 0;
+  HAL_I2C_Mem_Read(hi2c, ADV7393_I2C_ADDR_R, (uint16_t) reg, I2C_MEMADD_SIZE_8BIT, &value, 1, I2C_TIMEOUT_MAX);
+  return value;
 }
 
-static void write(uint8_t reg, uint8_t value) {
-  I2C_WriteData(ADV7393_I2C_ADDR_W, reg, value);
+static HAL_StatusTypeDef write(uint8_t reg, uint8_t value) {
+  return HAL_I2C_Mem_Write(hi2c, ADV7393_I2C_ADDR_W, (uint16_t) reg, I2C_MEMADD_SIZE_8BIT, &value, 1, I2C_TIMEOUT_MAX);
 }
 
-void adv7393_init() {
+void adv7393_init(I2C_HandleTypeDef *h) {
+  hi2c = h;
+
   /**
    * b0 - Reserved
    * b1 - Software reset - Writing a 1 resets the device; this is a self-clearing bit.

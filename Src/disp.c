@@ -8,14 +8,13 @@
 
 #define swap(a, b) { int16_t t = a; a = b; b = t; }
 
-extern LTDC_HandleTypeDef hltdc;
-extern SDRAM_HandleTypeDef hsdram1;
+static LTDC_HandleTypeDef *ltdc;
 
 void DISP_FillScreen(uint16_t color) {
   uint32_t i;
-  uint32_t n = hltdc.LayerCfg[0].ImageHeight * hltdc.LayerCfg[0].ImageWidth;
+  uint32_t n = ltdc->LayerCfg[0].ImageHeight * ltdc->LayerCfg[0].ImageWidth;
   for (i = 0; i < n; i++) {
-    *(__IO uint16_t *) (hltdc.LayerCfg[0].FBStartAdress + (i * 2)) = DISP_SwapRedBlue(color);
+    *(__IO uint16_t *) (ltdc->LayerCfg[0].FBStartAdress + (i * 2)) = DISP_SwapRedBlue(color);
   }
 }
 
@@ -25,20 +24,20 @@ void DISP_FillRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t 
   if (y1 > y2) swap(y1, y2);
   for (ypos = y1; ypos <= y2; ypos++) {
     for (xpos = x1; xpos <= x2; xpos++) {
-      *(__IO uint16_t *) (hltdc.LayerCfg[0].FBStartAdress +
-                          (2 * (ypos * hltdc.LayerCfg[0].ImageWidth + xpos))) = DISP_SwapRedBlue((uint16_t) color);
+      *(__IO uint16_t *) (ltdc->LayerCfg[0].FBStartAdress +
+                          (2 * (ypos * ltdc->LayerCfg[0].ImageWidth + xpos))) = DISP_SwapRedBlue((uint16_t) color);
     }
   }
 }
 
 void DISP_DrawPixel(uint16_t Xpos, uint16_t Ypos, uint16_t color) {
-  *(__IO uint16_t *) (hltdc.LayerCfg[0].FBStartAdress +
-                      (2 * (Ypos * hltdc.LayerCfg[0].ImageWidth + Xpos))) = DISP_SwapRedBlue(color);
+  *(__IO uint16_t *) (ltdc->LayerCfg[0].FBStartAdress +
+                      (2 * (Ypos * ltdc->LayerCfg[0].ImageWidth + Xpos))) = DISP_SwapRedBlue(color);
 }
 
 void DISP_DrawBitmap(uint16_t *ptr_image, uint16_t img_width, uint16_t img_height, uint8_t tile, uint8_t center) {
-  uint16_t screen_width = hltdc.LayerCfg[0].ImageWidth;
-  uint16_t screen_height = hltdc.LayerCfg[0].ImageHeight;
+  uint16_t screen_width = ltdc->LayerCfg[0].ImageWidth;
+  uint16_t screen_height = ltdc->LayerCfg[0].ImageHeight;
 
   int16_t offset_x = center && img_width < screen_width ? (screen_width - img_width) / 2 : 0;
   int16_t offset_y = center && img_height < screen_height ? (screen_height - img_height) / 2 : 0;
@@ -52,7 +51,7 @@ void DISP_DrawBitmap(uint16_t *ptr_image, uint16_t img_width, uint16_t img_heigh
         continue;
       }
 
-      uint32_t addr = hltdc.LayerCfg[0].FBStartAdress + (y * screen_width + x) * 2;
+      uint32_t addr = ltdc->LayerCfg[0].FBStartAdress + (y * screen_width + x) * 2;
       uint16_t pixel = DISP_SwapRedBlue(ptr_image[src_y * img_width + src_x]);
 
       *(__IO uint16_t *) addr = pixel;
@@ -96,35 +95,37 @@ void DISP_drawRects(uint16_t w, uint16_t h, uint8_t step) {
 }
 
 uint32_t DISP_getScreenWidth() {
-  return hltdc.LayerCfg[0].ImageWidth;
+  return ltdc->LayerCfg[0].ImageWidth;
 }
 
 uint32_t DISP_getScreenHeight() {
-  return hltdc.LayerCfg[0].ImageHeight;
+  return ltdc->LayerCfg[0].ImageHeight;
 }
 
 DISP_LTDC_ConfigTypeDef DISP_getCurrentCfg() {
   DISP_LTDC_ConfigTypeDef cfg = {
-      .HorizontalSync = hltdc.Init.HorizontalSync,
-      .VerticalSync = hltdc.Init.VerticalSync,
-      .AccumulatedHBP = hltdc.Init.AccumulatedHBP,
-      .AccumulatedVBP = hltdc.Init.AccumulatedVBP,
-      .AccumulatedActiveW = hltdc.Init.AccumulatedActiveW,
-      .AccumulatedActiveH = hltdc.Init.AccumulatedActiveH,
-      .TotalWidth = hltdc.Init.TotalWidth,
-      .TotalHeight = hltdc.Init.TotalHeigh,
-      .ImageWidth = hltdc.LayerCfg[0].ImageWidth,
-      .ImageHeight = hltdc.LayerCfg[0].ImageHeight,
+      .HorizontalSync = ltdc->Init.HorizontalSync,
+      .VerticalSync = ltdc->Init.VerticalSync,
+      .AccumulatedHBP = ltdc->Init.AccumulatedHBP,
+      .AccumulatedVBP = ltdc->Init.AccumulatedVBP,
+      .AccumulatedActiveW = ltdc->Init.AccumulatedActiveW,
+      .AccumulatedActiveH = ltdc->Init.AccumulatedActiveH,
+      .TotalWidth = ltdc->Init.TotalWidth,
+      .TotalHeight = ltdc->Init.TotalHeigh,
+      .ImageWidth = ltdc->LayerCfg[0].ImageWidth,
+      .ImageHeight = ltdc->LayerCfg[0].ImageHeight,
   };
   return cfg;
 }
 
-void DISP_init() {
-  IS42S16400J_Init(&hsdram1);
-  ILI9341_init();
-  adv7393_init();
+void DISP_init(SDRAM_HandleTypeDef *hsdram, LTDC_HandleTypeDef *hltdc, SPI_HandleTypeDef *hspi, I2C_HandleTypeDef *hi2c) {
+  ltdc = hltdc;
 
-  HAL_LTDC_SetAddress(&hltdc, FRAME_BUFFER_ADDR, LTDC_LAYER_1);
+  IS42S16400J_Init(hsdram);
+  ILI9341_init(hspi);
+  adv7393_init(hi2c);
+
+  HAL_LTDC_SetAddress(hltdc, FRAME_BUFFER_ADDR, LTDC_LAYER_1);
 }
 
 void DISP_reInit() {

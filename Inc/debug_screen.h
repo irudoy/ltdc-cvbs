@@ -1,7 +1,9 @@
 #ifndef LTDC_0_DEBUG_SCREEN_H
 #define LTDC_0_DEBUG_SCREEN_H
 
-void DEBUG_SCREEN_init(void);
+#include "main.h"
+
+void DEBUG_SCREEN_init(RNG_HandleTypeDef *h);
 
 void DEBUG_SCREEN_tick(void);
 

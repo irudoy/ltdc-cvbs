@@ -1,7 +1,6 @@
 #include "ili9341_mod.h"
-#include "main.h"
 
-extern SPI_HandleTypeDef hspi5;
+static SPI_HandleTypeDef *hspi;
 
 #define DISPLAY_WIDTH 240
 #define DISPLAY_HEIGHT 320
@@ -17,7 +16,9 @@ static void ILI9341_write_command(uint8_t command);
 
 static void ILI9341_write_data(uint8_t data);
 
-void ILI9341_init(void) {
+void ILI9341_init(SPI_HandleTypeDef *h) {
+  hspi = h;
+
   /* select SPI5 */
   SELECT();     // only one SPI slave on bus (keep slave selected)
 
@@ -154,7 +155,7 @@ void ILI9341_clear_screen(void) {
 }
 
 static void SPI_transmit(uint8_t *data, int length) {
-  HAL_SPI_Transmit(&hspi5, data, length, 0);
+  HAL_SPI_Transmit(hspi, data, length, 0);
 }
 
 static void ILI9341_write_command(uint8_t command) {

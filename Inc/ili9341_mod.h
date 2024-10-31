@@ -1,6 +1,8 @@
 #ifndef ILI9341
 #define ILI9341
 
+#include "main.h"
+
 /* IL9341 command set */
 /* Level 1 commands */
 #define ILI9341_NO_OP                                  0x00   /* no op */
@@ -89,7 +91,7 @@
 #define ILI9341_3GAMMA_ENABLE                          0xF2   /* 3 Gamma enable register */
 #define ILI9341_PUMP_RATIO_CONTROL                     0xF7   /* Pump ratio control register */
 
-void ILI9341_init(void);
+void ILI9341_init(SPI_HandleTypeDef *h);
 
 void ILI9341_set_window(int x, int y, int width, int height);
 

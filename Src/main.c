@@ -7,6 +7,7 @@
 /* USER CODE BEGIN Includes */
 #include "disp.h"
 #include "debug_screen.h"
+#include "api.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -28,7 +29,7 @@ I2C_HandleTypeDef hi2c3;
 
 LTDC_HandleTypeDef hltdc;
 
-RNG_HandleTypeDef hrng;
+RNG_HandleTypeDef rngHandle;
 
 SPI_HandleTypeDef hspi5;
 
@@ -90,8 +91,9 @@ int main(void)
   MX_I2C3_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  DISP_init();
-  DEBUG_SCREEN_init();
+  DISP_init(&hsdram1, &hltdc, &hspi5, &hi2c3);
+  DEBUG_SCREEN_init(&rngHandle);
+  API_Init(&huart1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -276,8 +278,8 @@ static void MX_RNG_Init(void)
   /* USER CODE BEGIN RNG_Init 1 */
 
   /* USER CODE END RNG_Init 1 */
-  hrng.Instance = RNG;
-  if (HAL_RNG_Init(&hrng) != HAL_OK)
+  rngHandle.Instance = RNG;
+  if (HAL_RNG_Init(&rngHandle) != HAL_OK)
   {
     Error_Handler();
   }

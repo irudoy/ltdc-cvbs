@@ -1,6 +1,8 @@
 #ifndef ADV7393_H
 #define ADV7393_H
 
+#include "main.h"
+
 #define ADV7393_I2C_ADDR 0x54
 #define ADV7393_I2C_ADDR_R (ADV7393_I2C_ADDR | 0x1)
 #define ADV7393_I2C_ADDR_W ADV7393_I2C_ADDR
@@ -92,6 +94,6 @@
 #define ADV7393_SD_TIMING_REG_0_RST 0b00001000 // 0x08
 #define ADV7393_SD_TIMING_REG_1_RST 0b00000000 // 0x00
 
-void adv7393_init();
+void adv7393_init(I2C_HandleTypeDef *h);
 
 #endif //ADV7393_H
