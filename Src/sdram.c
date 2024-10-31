@@ -1,4 +1,4 @@
-#include "IS42S16400J.h"
+#include "sdram.h"
 
 FMC_SDRAM_CommandTypeDef command;
 

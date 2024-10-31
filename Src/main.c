@@ -5,16 +5,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "ili9341-mod.h"
-#include "ltdc.h"
-#include "IS42S16400J.h"
-#include "adv7393.h"
-
-#include "screen_mfd_single_317_186.h"
-#include "screen_mfd_multi_317_185.h"
-#include "picture.h"
-#include "philips_pm5544_320_240.h"
-#include "smpte_color_bars_320_240.h"
+#include "disp.h"
+#include "debug_screen.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -24,7 +16,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LCD_FRAME_BUFFER SDRAM_BANK_ADDR
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -41,20 +32,11 @@ RNG_HandleTypeDef hrng;
 
 SPI_HandleTypeDef hspi5;
 
+UART_HandleTypeDef huart1;
+
 SDRAM_HandleTypeDef hsdram1;
 
 /* USER CODE BEGIN PV */
-/**
-   * For 16 bpp colors the color format is RGB565.
-   * That is 5 bits for red, 6 bits for green, 5 bits for blue.
-   * As we have 5 bits for red, fully lit is 31
-   */
-uint16_t brightPurpleRGB565 = 31 << 11 | 0 << 5 | 31 << 0;
-uint16_t redRGB565 = 31 << 11 | 0 << 5 | 0 << 0;
-uint16_t greenRGB565 = 0 << 11 | 31 << 5 | 0 << 0;
-uint16_t blueRGB565 = 0 << 11 | 0 << 5 | 31 << 0;
-uint16_t whiteRGB565 = 0xFFFF;
-uint16_t blackRGB565 = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,8 +47,8 @@ static void MX_RNG_Init(void);
 static void MX_SPI5_Init(void);
 static void MX_FMC_Init(void);
 static void MX_I2C3_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-static void drawRects(uint16_t w, uint16_t h, uint8_t step);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -106,19 +88,10 @@ int main(void)
   MX_SPI5_Init();
   MX_FMC_Init();
   MX_I2C3_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  IS42S16400J_Init(&hsdram1);
-  ILI9341_init();
-  adv7393_init();
-
-  HAL_LTDC_SetAddress(&hltdc, LCD_FRAME_BUFFER, LTDC_LAYER_1);
-
-  init_screen_mfd_single_317x186();
-  init_screen_mfd_multi_317_185();
-  init_fox_240x320();
-  init_philips_pm5544_320_240();
-  init_smpte_color_bars_320_240();
-
+  DISP_init();
+  DEBUG_SCREEN_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -128,72 +101,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    drawRects(DISPLAY_WIDTH, DISPLAY_HEIGHT, 10);
-    HAL_Delay(3000);
-
-    drawRects(DISPLAY_WIDTH, DISPLAY_HEIGHT, 4);
-    HAL_Delay(3000);
-
-    drawRects(DISPLAY_WIDTH, DISPLAY_HEIGHT, 1);
-    HAL_Delay(3000);
-
-    TFT_FillScreen(redRGB565);
-    HAL_Delay(500);
-    TFT_FillScreen(greenRGB565);
-    HAL_Delay(500);
-    TFT_FillScreen(blueRGB565);
-    HAL_Delay(500);
-
-    TFT_FillScreen(blackRGB565);
-    TFT_DrawBitmap(get_philips_pm5544_320_240(), 320, 240, 0, 1);
-    HAL_Delay(5000);
-    TFT_FillScreen(blackRGB565);
-    TFT_DrawBitmap(get_smpte_color_bars_320_240(), 320, 240, 0, 1);
-    HAL_Delay(5000);
-    TFT_FillScreen(blackRGB565);
-    TFT_DrawBitmap(get_screen_mfd_single_317x186(), 317, 186, 0, 1);
-    HAL_Delay(5000);
-    TFT_FillScreen(blackRGB565);
-    TFT_DrawBitmap(get_screen_mfd_multi_317_185(), 317, 185, 0, 1);
-    HAL_Delay(5000);
-    TFT_FillScreen(blackRGB565);
-    TFT_DrawBitmap(get_fox_240x320(), 240, 320, 1, 0);
-    HAL_Delay(5000);
-
-    for (uint16_t i = 0; i < 2000; i++) {
-      for (uint16_t j = 0; j < 25; j++) {
-        TFT_DrawPixel(
-          HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_WIDTH,
-          HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_HEIGHT,
-          (uint16_t)HAL_RNG_GetRandomNumber(&hrng)
-        );
-      }
-
-      HAL_Delay(1);
-    }
-
-    HAL_Delay(1000);
-
-    for (uint16_t i = 0; i < 1000; i++) {
-      TFT_FillRect(
-        HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_WIDTH,
-        HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_HEIGHT,
-        HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_WIDTH,
-        HAL_RNG_GetRandomNumber(&hrng) % DISPLAY_HEIGHT,
-        (uint16_t)HAL_RNG_GetRandomNumber(&hrng)
-      );
-
-      HAL_Delay(10);
-    }
-
-    HAL_Delay(1000);
-
-    for (uint16_t i = 0; i < 5; i++) {
-      TFT_FillScreen((uint16_t)HAL_RNG_GetRandomNumber(&hrng));
-      HAL_Delay(750);
-    }
-
-    HAL_Delay(1000);
+    DEBUG_SCREEN_tick();
   }
   /* USER CODE END 3 */
 }
@@ -313,14 +221,14 @@ static void MX_LTDC_Init(void)
   hltdc.Init.VSPolarity = LTDC_VSPOLARITY_AL;
   hltdc.Init.DEPolarity = LTDC_DEPOLARITY_AL;
   hltdc.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
-  hltdc.Init.HorizontalSync = 63;
-  hltdc.Init.VerticalSync = 3;
-  hltdc.Init.AccumulatedHBP = 123;
+  hltdc.Init.HorizontalSync = 62;
+  hltdc.Init.VerticalSync = 2;
+  hltdc.Init.AccumulatedHBP = 279;
   hltdc.Init.AccumulatedVBP = 18;
-  hltdc.Init.AccumulatedActiveW = 763;
+  hltdc.Init.AccumulatedActiveW = 639;
   hltdc.Init.AccumulatedActiveH = 258;
-  hltdc.Init.TotalWidth = 779;
-  hltdc.Init.TotalHeigh = 261;
+  hltdc.Init.TotalWidth = 857;
+  hltdc.Init.TotalHeigh = 262;
   hltdc.Init.Backcolor.Blue = 0;
   hltdc.Init.Backcolor.Green = 0;
   hltdc.Init.Backcolor.Red = 0;
@@ -329,7 +237,7 @@ static void MX_LTDC_Init(void)
     Error_Handler();
   }
   pLayerCfg.WindowX0 = 0;
-  pLayerCfg.WindowX1 = 640;
+  pLayerCfg.WindowX1 = 360;
   pLayerCfg.WindowY0 = 0;
   pLayerCfg.WindowY1 = 240;
   pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
@@ -338,7 +246,7 @@ static void MX_LTDC_Init(void)
   pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_PAxCA;
   pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_PAxCA;
   pLayerCfg.FBStartAdress = 0;
-  pLayerCfg.ImageWidth = 640;
+  pLayerCfg.ImageWidth = 360;
   pLayerCfg.ImageHeight = 240;
   pLayerCfg.Backcolor.Blue = 0;
   pLayerCfg.Backcolor.Green = 0;
@@ -414,6 +322,39 @@ static void MX_SPI5_Init(void)
   /* USER CODE BEGIN SPI5_Init 2 */
 
   /* USER CODE END SPI5_Init 2 */
+
+}
+
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
 
 }
 
@@ -511,8 +452,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(CSX_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : B1_Pin MEMS_INT1_Pin MEMS_INT2_Pin TP_INT1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin|MEMS_INT1_Pin|MEMS_INT2_Pin|TP_INT1_Pin;
+  /*Configure GPIO pin : B1_Pin */
+  GPIO_InitStruct.Pin = B1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : MEMS_INT1_Pin MEMS_INT2_Pin TP_INT1_Pin */
+  GPIO_InitStruct.Pin = MEMS_INT1_Pin|MEMS_INT2_Pin|TP_INT1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -570,14 +517,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(WRX_DCX_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : STLINK_RX_Pin STLINK_TX_Pin */
-  GPIO_InitStruct.Pin = STLINK_RX_Pin|STLINK_TX_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
   /*Configure GPIO pins : LD3_Pin LD4_Pin */
   GPIO_InitStruct.Pin = LD3_Pin|LD4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -585,35 +524,16 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
-static void drawRects(uint16_t w, uint16_t h, uint8_t step) {
-  uint16_t colors[5] = {redRGB565, greenRGB565, blueRGB565, whiteRGB565, blackRGB565};
-  uint8_t colorIndex = 0;
 
-  uint16_t width = w;
-  uint16_t height = h;
-
-  uint16_t centerX = w / 2;
-  uint16_t centerY = h / 2;
-
-  while (width > 0 && height > 0) {
-    uint16_t x1 = centerX - width / 2;
-    uint16_t y1 = centerY - height / 2;
-    uint16_t x2 = centerX + width / 2;
-    uint16_t y2 = centerY + height / 2;
-
-    TFT_FillRect(x1, y1, x2, y2, colors[colorIndex]);
-
-    colorIndex = (colorIndex + 1) % 5;
-
-    width -= step;
-    height -= step;
-  }
-}
 /* USER CODE END 4 */
 
 /**

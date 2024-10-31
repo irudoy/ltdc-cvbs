@@ -1,7 +1,7 @@
 #ifndef __IS42S16400J_H
 #define __IS42S16400J_H
 
-#include "stm32f4xx_hal.h"
+#include "main.h"
 
 #define SDRAM_BANK_ADDR                          ((uint32_t)0xD0000000)
 #define SDRAM_BANK_SIZE                          ((uint32_t)0x800000) // SDRAM bank size bytes
