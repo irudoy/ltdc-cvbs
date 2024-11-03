@@ -48,7 +48,9 @@ DISP_LTDC_ConfigTypeDef DISP_getCurrentCfg(void);
 
 void DISP_init(SDRAM_HandleTypeDef *hsdram, LTDC_HandleTypeDef *hltdc, SPI_HandleTypeDef *hspi, I2C_HandleTypeDef *hi2c);
 
-void DISP_reInit(void);
+void DISP_reInit(DISP_LTDC_ConfigTypeDef *newCfg);
+
+uint32_t DISP_getLtdcPixelClockFreq(void);
 
 
 #endif /* __DISP_H */

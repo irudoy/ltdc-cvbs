@@ -1,3 +1,4 @@
+#include <math.h>
 #include "main.h"
 #include "disp.h"
 #include "adv7393.h"
@@ -118,6 +119,53 @@ DISP_LTDC_ConfigTypeDef DISP_getCurrentCfg() {
   return cfg;
 }
 
+uint32_t DISP_getLtdcPixelClockFreq(void) {
+  uint32_t pllsai_source_freq;
+  uint32_t pllm, pllsain, pllsair, ltdc_div;
+  if (__HAL_RCC_GET_PLL_OSCSOURCE() == RCC_PLLSOURCE_HSE) {
+    pllsai_source_freq = HSE_VALUE;
+  } else {
+    pllsai_source_freq = HSI_VALUE;
+  }
+  pllm = (RCC->PLLCFGR & RCC_PLLCFGR_PLLM) >> RCC_PLLCFGR_PLLM_Pos;
+  pllsain = (RCC->PLLSAICFGR & RCC_PLLSAICFGR_PLLSAIN) >> RCC_PLLSAICFGR_PLLSAIN_Pos;
+  pllsair = (RCC->PLLSAICFGR & RCC_PLLSAICFGR_PLLSAIR) >> RCC_PLLSAICFGR_PLLSAIR_Pos;
+  ltdc_div = (RCC->DCKCFGR & RCC_DCKCFGR_PLLSAIDIVR) >> RCC_DCKCFGR_PLLSAIDIVR_Pos;
+  uint32_t pllsai_vco_freq = (pllsai_source_freq / pllm) * pllsain;
+  uint32_t pllsai_r_freq = pllsai_vco_freq / pllsair;
+  uint32_t ltdc_pixel_clock_freq = pllsai_r_freq / (ltdc_div == 0 ? 2 : (ltdc_div == 1 ? 4 : 8));
+  return ltdc_pixel_clock_freq;
+}
+
+static void DISP_updateFsc() {
+  // Init FSC
+  // Default for ntsc: 569408543 0x21F07C1F
+
+  // ntsc_sf_hz = 3579545
+  // clkFreqHz = 27000000
+  // totalWidth = 857
+  // lineClkCycles = (totalWidth + 1) * 2 = 1716
+  // lineClkFreq = clkFreqHz / lineClkCycles = 15734.26
+  // lineSubcPeriods = ntsc_sf_hz / lineClkFreq = 227.5
+  // register_value = (lineSubcPeriods / lineClkCycles) * (2^32) = 569408543
+
+  // uint32_t currentFsc = ADV7393_readFsc();
+
+  const uint32_t ntscFscHz = 3579545;
+
+  uint32_t clkFreqHz = DISP_getLtdcPixelClockFreq() * 2;
+  uint32_t totalWidth = ltdc->Init.TotalWidth;
+  uint32_t lineClkCycles = (totalWidth + 1) * 2;
+
+  double lineClkFreq = (double) clkFreqHz / (double) lineClkCycles;
+  double lineSubcPeriods = (double) ntscFscHz / lineClkFreq;
+
+  // have 569408471 there, but it must be 569408543
+  uint32_t newFsc = (uint32_t)round((lineSubcPeriods * 4294967296.0) / lineClkCycles);
+
+  ADV7393_writeFsc(newFsc);
+}
+
 void DISP_init(SDRAM_HandleTypeDef *hsdram, LTDC_HandleTypeDef *hltdc, SPI_HandleTypeDef *hspi, I2C_HandleTypeDef *hi2c) {
   ltdc = hltdc;
 
@@ -125,42 +173,45 @@ void DISP_init(SDRAM_HandleTypeDef *hsdram, LTDC_HandleTypeDef *hltdc, SPI_Handl
   ILI9341_init(hspi);
   adv7393_init(hi2c);
 
+  DISP_updateFsc();
+
   HAL_LTDC_SetAddress(hltdc, FRAME_BUFFER_ADDR, LTDC_LAYER_1);
 }
 
-void DISP_reInit() {
-  //  hltdc.Init.HorizontalSync = 63;
-  //  hltdc.Init.VerticalSync = 3;
-  //  hltdc.Init.AccumulatedHBP = 123;
-  //  hltdc.Init.AccumulatedVBP = 18;
-  //  hltdc.Init.AccumulatedActiveW = 763;
-  //  hltdc.Init.AccumulatedActiveH = 258;
-  //  hltdc.Init.TotalWidth = 779;
-  //  hltdc.Init.TotalHeigh = 261;
-  //  if (HAL_LTDC_Init(&hltdc) != HAL_OK) {
-  //    Error_Handler();
-  //  }
-  //
-  //  LTDC_LayerCfgTypeDef pLayerCfg = {0};
-  //  pLayerCfg.WindowX0 = 0;
-  //  pLayerCfg.WindowX1 = 320;
-  //  pLayerCfg.WindowY0 = 0;
-  //  pLayerCfg.WindowY1 = 240;
-  //  pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
-  //  pLayerCfg.Alpha = 255;
-  //  pLayerCfg.Alpha0 = 0;
-  //  pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_PAxCA;
-  //  pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_PAxCA;
-  //  pLayerCfg.FBStartAdress = 0;
-  //  pLayerCfg.ImageWidth = 320;
-  //  pLayerCfg.ImageHeight = 240;
-  //  pLayerCfg.Backcolor.Blue = 0;
-  //  pLayerCfg.Backcolor.Green = 0;
-  //  pLayerCfg.Backcolor.Red = 0;
-  //  if (HAL_LTDC_ConfigLayer(&hltdc, &pLayerCfg, 0) != HAL_OK)
-  //  {
-  //    Error_Handler();
-  //  }
-  //
-  //  HAL_LTDC_SetAddress(&hltdc, LCD_FRAME_BUFFER, LTDC_LAYER_1);
+void DISP_reInit(DISP_LTDC_ConfigTypeDef *newCfg) {
+  LTDC_LayerCfgTypeDef pLayerCfg = {0};
+
+  ltdc->Init.HorizontalSync = newCfg->HorizontalSync;
+  ltdc->Init.VerticalSync = newCfg->VerticalSync;
+  ltdc->Init.AccumulatedHBP = newCfg->AccumulatedHBP;
+  ltdc->Init.AccumulatedVBP = newCfg->AccumulatedVBP;
+  ltdc->Init.AccumulatedActiveW = newCfg->AccumulatedActiveW;
+  ltdc->Init.AccumulatedActiveH = newCfg->AccumulatedActiveH;
+  ltdc->Init.TotalWidth = newCfg->TotalWidth;
+  ltdc->Init.TotalHeigh = newCfg->TotalHeight;
+  if (HAL_LTDC_Init(ltdc) != HAL_OK) {
+    Error_Handler();
+  }
+  pLayerCfg.WindowX0 = ltdc->LayerCfg[0].WindowX0;
+  pLayerCfg.WindowX1 = newCfg->ImageWidth;
+  pLayerCfg.WindowY0 = ltdc->LayerCfg[0].WindowY0;
+  pLayerCfg.WindowY1 = newCfg->ImageHeight;
+  pLayerCfg.PixelFormat = ltdc->LayerCfg[0].PixelFormat;
+  pLayerCfg.Alpha = ltdc->LayerCfg[0].Alpha;
+  pLayerCfg.Alpha0 = ltdc->LayerCfg[0].Alpha0;
+  pLayerCfg.BlendingFactor1 = ltdc->LayerCfg[0].BlendingFactor1;
+  pLayerCfg.BlendingFactor2 = ltdc->LayerCfg[0].BlendingFactor2;
+  pLayerCfg.FBStartAdress = ltdc->LayerCfg[0].FBStartAdress;
+  pLayerCfg.ImageWidth = newCfg->ImageWidth;
+  pLayerCfg.ImageHeight = newCfg->ImageHeight;
+  pLayerCfg.Backcolor.Blue = ltdc->LayerCfg[0].Backcolor.Blue;
+  pLayerCfg.Backcolor.Green = ltdc->LayerCfg[0].Backcolor.Green;
+  pLayerCfg.Backcolor.Red = ltdc->LayerCfg[0].Backcolor.Red;
+  if (HAL_LTDC_ConfigLayer(ltdc, &pLayerCfg, 0) != HAL_OK) {
+    Error_Handler();
+  }
+
+  HAL_LTDC_SetAddress(ltdc, FRAME_BUFFER_ADDR, LTDC_LAYER_1);
+
+  DISP_updateFsc();
 }

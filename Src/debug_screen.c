@@ -7,11 +7,12 @@
 //#include "screen_mfd_multi_317_185.h"
 //#include "picture.h"
 
+#define SCREEN_INIT 6
 #define SCREEN_MAX 12
 
 static RNG_HandleTypeDef *rngHandle;
-static uint8_t currentScreen = 254;
-static uint8_t nextScreen = 0;
+static uint8_t currentScreen = 0xFF;
+static uint8_t nextScreen = SCREEN_INIT;
 
 void DEBUG_SCREEN_init(RNG_HandleTypeDef *h) {
   rngHandle = h;
@@ -43,10 +44,10 @@ void DEBUG_SCREEN_tick() {
         DISP_FillScreen(DISP_COLOR_RED);
         break;
       }
-//      case 4: {
-//        DISP_FillScreen(DISP_COLOR_GREEN);
-//        break;
-//      }
+      case 4: {
+        DISP_FillScreen(DISP_COLOR_GREEN);
+        break;
+      }
       case 5: {
         DISP_FillScreen(DISP_COLOR_BLUE);
         break;
@@ -77,7 +78,7 @@ void DEBUG_SCREEN_tick() {
 //        break;
 //      }
       case 11: {
-        for (uint16_t i = 0; i < 1000; i++) {
+        for (uint16_t i = 0; i < 100; i++) {
           DISP_FillRect(
               HAL_RNG_GetRandomNumber(rngHandle) % DISP_getScreenWidth(),
               HAL_RNG_GetRandomNumber(rngHandle) % DISP_getScreenHeight(),
@@ -91,10 +92,7 @@ void DEBUG_SCREEN_tick() {
         break;
       }
       case SCREEN_MAX: {
-        for (uint16_t i = 0; i < 5; i++) {
-          DISP_FillScreen((uint16_t) HAL_RNG_GetRandomNumber(rngHandle));
-          HAL_Delay(750);
-        }
+        DISP_FillScreen((uint16_t) HAL_RNG_GetRandomNumber(rngHandle));
         break;
       }
       default: {

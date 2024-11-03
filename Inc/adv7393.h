@@ -96,4 +96,8 @@
 
 void adv7393_init(I2C_HandleTypeDef *h);
 
+uint32_t ADV7393_readFsc(void);
+
+void ADV7393_writeFsc(uint32_t fsc);
+
 #endif //ADV7393_H

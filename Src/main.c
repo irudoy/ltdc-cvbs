@@ -29,7 +29,7 @@ I2C_HandleTypeDef hi2c3;
 
 LTDC_HandleTypeDef hltdc;
 
-RNG_HandleTypeDef rngHandle;
+RNG_HandleTypeDef hrng;
 
 SPI_HandleTypeDef hspi5;
 
@@ -92,7 +92,7 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   DISP_init(&hsdram1, &hltdc, &hspi5, &hi2c3);
-  DEBUG_SCREEN_init(&rngHandle);
+  DEBUG_SCREEN_init(&hrng);
   API_Init(&huart1);
   /* USER CODE END 2 */
 
@@ -223,14 +223,14 @@ static void MX_LTDC_Init(void)
   hltdc.Init.VSPolarity = LTDC_VSPOLARITY_AL;
   hltdc.Init.DEPolarity = LTDC_DEPOLARITY_AL;
   hltdc.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
-  hltdc.Init.HorizontalSync = 62;
+  hltdc.Init.HorizontalSync = 30;
   hltdc.Init.VerticalSync = 2;
-  hltdc.Init.AccumulatedHBP = 279;
-  hltdc.Init.AccumulatedVBP = 18;
-  hltdc.Init.AccumulatedActiveW = 639;
-  hltdc.Init.AccumulatedActiveH = 258;
-  hltdc.Init.TotalWidth = 857;
-  hltdc.Init.TotalHeigh = 262;
+  hltdc.Init.AccumulatedHBP = 60;
+  hltdc.Init.AccumulatedVBP = 17;
+  hltdc.Init.AccumulatedActiveW = 420;
+  hltdc.Init.AccumulatedActiveH = 257;
+  hltdc.Init.TotalWidth = 428;
+  hltdc.Init.TotalHeigh = 261;
   hltdc.Init.Backcolor.Blue = 0;
   hltdc.Init.Backcolor.Green = 0;
   hltdc.Init.Backcolor.Red = 0;
@@ -278,8 +278,8 @@ static void MX_RNG_Init(void)
   /* USER CODE BEGIN RNG_Init 1 */
 
   /* USER CODE END RNG_Init 1 */
-  rngHandle.Instance = RNG;
-  if (HAL_RNG_Init(&rngHandle) != HAL_OK)
+  hrng.Instance = RNG;
+  if (HAL_RNG_Init(&hrng) != HAL_OK)
   {
     Error_Handler();
   }
