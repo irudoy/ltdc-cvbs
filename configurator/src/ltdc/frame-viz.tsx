@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { State } from './types'
+import type { State } from '../types'
 
 interface Section {
   x: number
@@ -227,5 +227,5 @@ export function FrameViz({ state }: { state: State }) {
     })
   }, [state])
 
-  return <canvas className="mb-3" ref={canvasRef} />
+  return <canvas ref={canvasRef} />
 }

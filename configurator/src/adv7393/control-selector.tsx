@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Select, Checkbox, Input } from 'antd'
 import {
   combineBytes,
   getFieldValue,
@@ -49,28 +50,24 @@ export const ControlSelector: React.FC<ControlSelectorProps> = ({
   switch (field.type) {
     case 'enum':
       return (
-        <select
-          value={value}
-          onChange={(e) => handleChange(parseInt(e.target.value, 10))}
-        >
+        <Select value={value} onChange={(val) => handleChange(val)}>
           {field.options?.map((option) => (
-            <option key={option.value} value={option.value}>
+            <Select.Option key={option.value} value={option.value}>
               {option.label}
-            </option>
+            </Select.Option>
           ))}
-        </select>
+        </Select>
       )
     case 'boolean':
       return (
-        <input
-          type="checkbox"
-          checked={!!value}
+        <Checkbox
+          checked={Boolean(value)}
           onChange={(e) => handleChange(e.target.checked ? 1 : 0)}
         />
       )
     case 'int':
       return (
-        <input
+        <Input
           type="number"
           value={value}
           onChange={(e) => handleChange(parseInt(e.target.value, 10))}

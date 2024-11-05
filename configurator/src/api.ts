@@ -44,7 +44,7 @@ type MessageClkConfig = {
   pllSaiDivR: number
 }
 
-type MessageInParsed = MessageLTDCConfig | MessageClkConfig
+export type MessageInParsed = MessageLTDCConfig | MessageClkConfig
 
 function createPacket(command: CommandOut, payload?: Uint8Array): MessageOut {
   const message = new Uint8Array(MESSAGE_OUT_SIZE)
