@@ -63,16 +63,16 @@ const useConfigState = () => {
   })
 
   const handleInputChange =
-    (key: keyof ConfigStateEnhanced) =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const value = Number(event.target.value)
-      setState((prevState) => {
-        const newConfig = { ...prevState, [key]: value }
-        return {
-          ...newConfig,
-          ...computeState(newConfig),
-        }
-      })
+    (key: keyof ConfigStateEnhanced) => (value: string | number | null) => {
+      if (value !== null) {
+        setState((prevState) => {
+          const newConfig = { ...prevState, [key]: Number(value) }
+          return {
+            ...newConfig,
+            ...computeState(newConfig),
+          }
+        })
+      }
     }
 
   const saveCurrentState = () => {

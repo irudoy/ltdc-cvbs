@@ -1,0 +1,1 @@
+export { RegisterConfigurator } from './configurator'

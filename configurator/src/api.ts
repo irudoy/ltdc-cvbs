@@ -121,7 +121,16 @@ export function createMessageReader(
       buffer.set(chunk.subarray(2))
       bytesRead = chunk.length - 2
     } else {
-      buffer.set(chunk, bytesRead)
+      try {
+        buffer.set(chunk, bytesRead)
+      } catch (e) {
+        console.error(
+          'Failed to set buffer',
+          { chunk, chunkLength: chunk.length, type, size, buffer, bytesRead },
+          e
+        )
+        throw e
+      }
       bytesRead += chunk.length
     }
 
