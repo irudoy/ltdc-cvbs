@@ -401,7 +401,7 @@ function TimingsInput({
   )
 }
 
-function App() {
+export function App() {
   const [isDarkMode, setIsDarkMode] = useState(
     window.matchMedia('(prefers-color-scheme: dark)').matches
   )
@@ -423,5 +423,3 @@ function App() {
     </ConfigProvider>
   )
 }
-
-export default App
