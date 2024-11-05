@@ -161,12 +161,13 @@ static void DISP_updateFsc() {
   double lineSubcPeriods = (double) ntscFscHz / lineClkFreq;
 
   // have 569408471 there, but it must be 569408543
-  uint32_t newFsc = (uint32_t)round((lineSubcPeriods * 4294967296.0) / lineClkCycles);
+  uint32_t newFsc = (uint32_t) round((lineSubcPeriods * 4294967296.0) / lineClkCycles);
 
   ADV7393_writeFsc(newFsc);
 }
 
-void DISP_init(SDRAM_HandleTypeDef *hsdram, LTDC_HandleTypeDef *hltdc, SPI_HandleTypeDef *hspi, I2C_HandleTypeDef *hi2c) {
+void
+DISP_init(SDRAM_HandleTypeDef *hsdram, LTDC_HandleTypeDef *hltdc, SPI_HandleTypeDef *hspi, I2C_HandleTypeDef *hi2c) {
   ltdc = hltdc;
 
   IS42S16400J_Init(hsdram);
@@ -214,4 +215,27 @@ void DISP_reInit(DISP_LTDC_ConfigTypeDef *newCfg) {
   HAL_LTDC_SetAddress(ltdc, FRAME_BUFFER_ADDR, LTDC_LAYER_1);
 
   DISP_updateFsc();
+}
+
+void DISP_Set_Clock_Config(DISP_LTDC_ClockConfigTypeDef *cfg) {
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_LTDC;
+  PeriphClkInitStruct.PLLSAI.PLLSAIN = cfg->PLLSAIN;
+  PeriphClkInitStruct.PLLSAI.PLLSAIR = cfg->PLLSAIR;
+  PeriphClkInitStruct.PLLSAIDivR = cfg->PLLSAIDivR;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
+    Error_Handler();
+  }
+
+  DISP_updateFsc();
+}
+
+DISP_LTDC_ClockConfigTypeDef DISP_Get_Clock_Config(void) {
+  DISP_LTDC_ClockConfigTypeDef cfg = {
+      .PLLSAIN = (RCC->PLLSAICFGR & RCC_PLLSAICFGR_PLLSAIN) >> RCC_PLLSAICFGR_PLLSAIN_Pos,
+      .PLLSAIR = (RCC->PLLSAICFGR & RCC_PLLSAICFGR_PLLSAIR) >> RCC_PLLSAICFGR_PLLSAIR_Pos,
+      .PLLSAIDivR = (RCC->DCKCFGR & RCC_DCKCFGR_PLLSAIDIVR) >> RCC_DCKCFGR_PLLSAIDIVR_Pos,
+  };
+  return cfg;
 }

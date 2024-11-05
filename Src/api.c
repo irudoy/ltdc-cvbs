@@ -12,10 +12,13 @@ enum CommandOut {
   PREV_SCREEN = 0x02,
   GET_CONFIG = 0x03,
   PUSH_CONFIG = 0x04,
+  GET_CLK_CONFIG = 0x05,
+  PUSH_CLK_CONFIG = 0x06,
 };
 
 enum DataTypeIn {
   LTDC_CONFIG = 0x01,
+  LTDC_CLK_CONFIG = 0x02,
 };
 
 void API_Init(UART_HandleTypeDef *huart) {
@@ -83,6 +86,57 @@ static void API_parsePacket() {
       };
 
       DISP_reInit(&cfg);
+      break;
+    }
+    case GET_CLK_CONFIG: {
+      DISP_LTDC_ClockConfigTypeDef cfg = DISP_Get_Clock_Config();
+
+      uint8_t data[14] = {
+          LTDC_CLK_CONFIG,
+          12,
+      };
+
+      uint32_t *cfg_values[] = {
+          &cfg.PLLSAIN,
+          &cfg.PLLSAIR,
+          &cfg.PLLSAIDivR,
+      };
+
+      for (int i = 0; i < 3; i++) {
+        data[2 + i * 4] = (uint8_t) (*cfg_values[i] & 0xFF);
+        data[3 + i * 4] = (uint8_t) ((*cfg_values[i] >> 8) & 0xFF);
+        data[4 + i * 4] = (uint8_t) ((*cfg_values[i] >> 16) & 0xFF);
+        data[5 + i * 4] = (uint8_t) ((*cfg_values[i] >> 24) & 0xFF);
+      }
+
+      API_transmit(data, 14);
+      break;
+    }
+    case PUSH_CLK_CONFIG: {
+      DISP_LTDC_ClockConfigTypeDef cfg = {
+          .PLLSAIN = (uint32_t) (rxBuffer[1] | rxBuffer[2] << 8 | rxBuffer[3] << 16 | rxBuffer[4] << 24),
+          .PLLSAIR = (uint32_t) (rxBuffer[5] | rxBuffer[6] << 8 | rxBuffer[7] << 16 | rxBuffer[8] << 24),
+          .PLLSAIDivR = (uint32_t) (rxBuffer[9] | rxBuffer[10] << 8 | rxBuffer[11] << 16 | rxBuffer[12] << 24),
+      };
+
+      switch (cfg.PLLSAIDivR) {
+        case 0:
+          cfg.PLLSAIDivR = RCC_PLLSAIDIVR_2;
+          break;
+        case 1:
+          cfg.PLLSAIDivR = RCC_PLLSAIDIVR_4;
+          break;
+        case 2:
+          cfg.PLLSAIDivR = RCC_PLLSAIDIVR_8;
+          break;
+        case 3:
+          cfg.PLLSAIDivR = RCC_PLLSAIDIVR_16;
+          break;
+        default:
+          break;
+      }
+
+      DISP_Set_Clock_Config(&cfg);
       break;
     }
     default:

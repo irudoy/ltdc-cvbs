@@ -36,7 +36,7 @@ void adv7393_init(I2C_HandleTypeDef *h) {
    * b6 - SD pixel data valid
    * b7 - SD active video edge control
    */
-  write(ADV7393_SD_MODE_REG_2, MB(ADV7393_SD_MODE_REG_2_RST, 0b1, 6, 1));
+  write(ADV7393_SD_MODE_REG_2, MB(MB(MB(ADV7393_SD_MODE_REG_2_RST, 0b1, 4, 1), 0b1, 6, 1), 0b1, 7, 1));
 
   /**
    * b0 - SD SFL/SCR/TR mode select
@@ -91,40 +91,6 @@ void adv7393_init(I2C_HandleTypeDef *h) {
    * b7 - SD timing reset
    */
   write(ADV7393_SD_TIMING_REG_0, MB(ADV7393_SD_TIMING_REG_0_RST, 0b10, 1, 2));
-
-  /**
-   * # Given custom parameters for 320x240p resolution
-   * pixel_clock_mhz = 6.7e6  # Pixel clock in Hz
-   * hsync = 55               # HSync duration in pixels
-   * hbp = 64                 # Horizontal Back Porch in pixels
-   * active_width = 320       # Active width in pixels
-   * hfp = 18                 # Horizontal Front Porch in pixels
-   * subcarrier_frequency_ntsc = 3.579545e6  # NTSC subcarrier frequency in Hz (3.579545 MHz)
-   *
-   * # Step 1: Calculate total horizontal pixels
-   * total_horizontal_pixels_custom = hsync + hbp + active_width + hfp
-   *
-   * # Step 2: Calculate line frequency (f_h)
-   * line_frequency_custom = pixel_clock_mhz / total_horizontal_pixels_custom
-   *
-   * # Step 3: Calculate the number of subcarrier periods per line
-   * subcarrier_periods_per_line_custom = subcarrier_frequency_ntsc / line_frequency_custom
-   *
-   * # Step 4: Calculate the Fsc register value for the custom parameters
-   * fsc_value_custom = (subcarrier_periods_per_line_custom / total_horizontal_pixels_custom) * (2 ** 32)
-   *
-   * # Round to the nearest integer and convert to hexadecimal registers
-   * fsc_value_custom_rounded = round(fsc_value_custom)
-   * fsc_registers_custom = [(fsc_value_custom_rounded >> (8 * i)) & 0xFF for i in range(4)]
-   *
-   * fsc_value_custom_rounded, fsc_registers_custom
-   * 
-   * Fsc=2294631151 (0x88C54AEF)
-   *
-   * // Modified : 4.43361875 / 29.5 * (2^32) = 645499916 -> 0x26798C0C
-   * (3.57954 / (6.7 * 2)) * (2^32) = 1147313973 -> 0x44629F35
-   */
-
 }
 
 uint32_t ADV7393_readFsc(void) {

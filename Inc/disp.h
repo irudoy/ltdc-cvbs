@@ -28,6 +28,12 @@ typedef struct DISP_LTDC_ConfigTypeDef {
   uint32_t ImageHeight;
 } DISP_LTDC_ConfigTypeDef;
 
+typedef struct DISP_LTDC_ClockConfigTypeDef {
+  uint32_t PLLSAIN;
+  uint32_t PLLSAIR;
+  uint32_t PLLSAIDivR; // RCC_PLLSAIDIVR_2, RCC_PLLSAIDIVR_4, RCC_PLLSAIDIVR_8, RCC_PLLSAIDIVR_16
+} DISP_LTDC_ClockConfigTypeDef;
+
 void DISP_FillScreen(uint16_t color);
 
 void DISP_FillRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color);
@@ -52,5 +58,8 @@ void DISP_reInit(DISP_LTDC_ConfigTypeDef *newCfg);
 
 uint32_t DISP_getLtdcPixelClockFreq(void);
 
+void DISP_Set_Clock_Config(DISP_LTDC_ClockConfigTypeDef *cfg);
+
+DISP_LTDC_ClockConfigTypeDef DISP_Get_Clock_Config(void);
 
 #endif /* __DISP_H */
