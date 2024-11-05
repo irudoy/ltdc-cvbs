@@ -30,8 +30,6 @@ import {
 import { useConfigState } from './state-manager'
 import type { ClkState } from './types'
 
-import './App.css'
-
 function Root() {
   const {
     state,
