@@ -3,13 +3,17 @@ import { Button, Card, Checkbox } from 'antd'
 import { DownloadOutlined, UploadOutlined } from '@ant-design/icons'
 import { type MessageInParsed, DataTypeIn } from '../api'
 import { useStm32Serial } from '../serial-stm32'
+import type { Register } from './types'
+import { configRegisters as config } from './config'
 import { RegisterItem } from './register-item'
-import { configRegisters } from './config'
+import { RegisterGroup } from './register-group'
+import { combineBytes, splitToBytes } from './utils'
 
 export const RegisterConfigurator = () => {
   const [values, setValues] = useState<{ [key: string]: number }>(() =>
-    configRegisters.reduce(
+    config.reduce(
       (acc, reg) => {
+        if ('type' in reg) return acc
         acc[reg.address] = reg.resetValue
         return acc
       },
@@ -75,14 +79,46 @@ export const RegisterConfigurator = () => {
         </div>
       }
     >
-      {configRegisters.map((register) => (
-        <RegisterItem
-          key={register.address}
-          register={register}
-          value={values[register.address]}
-          onRegisterChange={handleRegisterChange}
-        />
-      ))}
+      {config.map((register) => {
+        if ('type' in register) {
+          const groupedRegisters = config.filter(
+            (it) => 'group' in it && it.group === register.id
+          ) as Register[]
+
+          const value = combineBytes(
+            groupedRegisters.map((r) => values[r.address])
+          )
+
+          const handleChange = (newValue: number) => {
+            splitToBytes(newValue, groupedRegisters.length).forEach(
+              (byte, i) => {
+                const reg = groupedRegisters[i]
+                handleRegisterChange(reg.address, byte)
+              }
+            )
+          }
+
+          return (
+            <RegisterGroup
+              key={register.name}
+              name={register.name}
+              description={register.description}
+              registers={groupedRegisters}
+              value={value}
+              onChange={handleChange}
+            />
+          )
+        }
+
+        return (
+          <RegisterItem
+            key={register.address}
+            register={register}
+            value={values[register.address]}
+            onRegisterChange={handleRegisterChange}
+          />
+        )
+      })}
     </Card>
   )
 }

@@ -1,76 +1,14 @@
-import type { Register } from './types'
+import type { Register, RegisterGroup } from './types'
 
-export const configRegisters: Register[] = [
-  {
-    address: 0x80,
-    name: 'SD Mode Register 1',
-    fields: [
-      {
-        name: 'SD Standard',
-        bitStart: 0,
-        bitEnd: 1,
-        type: 'enum',
-        options: [
-          { value: 0, label: 'NTSC' },
-          { value: 1, label: 'PAL B, PAL D, PAL G, PAL H, PAL I' },
-          { value: 2, label: 'PAL M' },
-          { value: 3, label: 'PAL N' },
-        ],
-      },
-      {
-        name: 'SD Luma Filter',
-        bitStart: 2,
-        bitEnd: 4,
-        type: 'enum',
-        options: [
-          { value: 0, label: 'LPF NTSC' },
-          { value: 1, label: 'LPF PAL' },
-          { value: 2, label: 'Notch NTSC' },
-          { value: 3, label: 'Notch PAL' },
-          { value: 4, label: 'Luma SSAF' },
-          { value: 5, label: 'Luma CIF' },
-          { value: 6, label: 'Luma QCIF' },
-          { value: 7, label: 'Reserved' },
-        ],
-      },
-      {
-        name: 'SD Chroma Filter',
-        bitStart: 5,
-        bitEnd: 7,
-        type: 'enum',
-        options: [
-          { value: 0, label: '1.3 MHz' },
-          { value: 1, label: '0.65 MHz' },
-          { value: 2, label: '1.0 MHz' },
-          { value: 3, label: '2.0 MHz' },
-          { value: 4, label: 'Reserved' },
-          { value: 5, label: 'Chroma CIF' },
-          { value: 6, label: 'Chroma QCIF' },
-          { value: 7, label: '3.0 MHz' },
-        ],
-      },
-    ],
-    resetValue: 0x10,
-  },
-  {
-    address: 0x8c,
-    name: 'Subcarrier Frequency',
-    fields: [
-      {
-        name: 'Frequency Value',
-        bitStart: 0,
-        bitEnd: 7,
-        type: 'hex',
-      },
-    ],
-    resetValue: 0x21,
-  },
+export const configRegisters: (Register | RegisterGroup)[] = [
   {
     address: 0x00,
     name: 'Power Mode',
     fields: [
       {
         name: 'Sleep Mode',
+        description:
+          'With this control enabled, the current consumption is reduced to µA level. All DACs and the internal PLL circuit are disabled. Registers can be read from and written to in sleep mode.',
         bitStart: 7,
         bitEnd: 7,
         type: 'boolean',
@@ -185,5 +123,126 @@ export const configRegisters: Register[] = [
       },
     ],
     resetValue: 0x20,
+  },
+  {
+    address: 0x80,
+    name: 'SD Mode Register 1',
+    fields: [
+      {
+        name: 'SD Standard',
+        bitStart: 0,
+        bitEnd: 1,
+        type: 'enum',
+        options: [
+          { value: 0, label: 'NTSC' },
+          { value: 1, label: 'PAL B, PAL D, PAL G, PAL H, PAL I' },
+          { value: 2, label: 'PAL M' },
+          { value: 3, label: 'PAL N' },
+        ],
+      },
+      {
+        name: 'SD Luma Filter',
+        bitStart: 2,
+        bitEnd: 4,
+        type: 'enum',
+        options: [
+          { value: 0, label: 'LPF NTSC' },
+          { value: 1, label: 'LPF PAL' },
+          { value: 2, label: 'Notch NTSC' },
+          { value: 3, label: 'Notch PAL' },
+          { value: 4, label: 'Luma SSAF' },
+          { value: 5, label: 'Luma CIF' },
+          { value: 6, label: 'Luma QCIF' },
+          { value: 7, label: 'Reserved' },
+        ],
+      },
+      {
+        name: 'SD Chroma Filter',
+        bitStart: 5,
+        bitEnd: 7,
+        type: 'enum',
+        options: [
+          { value: 0, label: '1.3 MHz' },
+          { value: 1, label: '0.65 MHz' },
+          { value: 2, label: '1.0 MHz' },
+          { value: 3, label: '2.0 MHz' },
+          { value: 4, label: 'Reserved' },
+          { value: 5, label: 'Chroma CIF' },
+          { value: 6, label: 'Chroma QCIF' },
+          { value: 7, label: '3.0 MHz' },
+        ],
+      },
+    ],
+    resetValue: 0x10,
+  },
+  {
+    type: 'group',
+    id: 'sd_fsc',
+    name: 'SD Subcarrier Frequency',
+    description: 'SD Subcarrier Frequency Combined',
+  },
+  {
+    address: 0x8c,
+    name: 'SD Fsc Register 0',
+    description: 'Subcarrier Frequency Bits[7:0]',
+    group: 'sd_fsc',
+    fields: [
+      {
+        name: 'Frequency Value',
+        description: 'Subcarrier Frequency Bits[7:0]',
+        bitStart: 0,
+        bitEnd: 7,
+        type: 'hex',
+      },
+    ],
+    resetValue: 0x1f,
+  },
+  {
+    address: 0x8d,
+    name: 'SD Fsc Register 1',
+    description: 'Subcarrier Frequency Bits[15:8]',
+    group: 'sd_fsc',
+    fields: [
+      {
+        name: 'Frequency Value',
+        description: 'Subcarrier Frequency Bits[15:8]',
+        bitStart: 0,
+        bitEnd: 7,
+        type: 'hex',
+      },
+    ],
+    resetValue: 0x7c,
+  },
+  {
+    address: 0x8e,
+    name: 'SD Fsc Register 2',
+    description: 'Subcarrier Frequency Bits[23:16]',
+    group: 'sd_fsc',
+    fields: [
+      {
+        name: 'Frequency Value',
+        description: 'Subcarrier Frequency Bits[23:16]',
+        bitStart: 0,
+        bitEnd: 7,
+        type: 'hex',
+      },
+    ],
+    resetValue: 0xf0,
+  },
+  {
+    address: 0x8f,
+    name: 'SD Fsc Register 3',
+    description: 'Subcarrier Frequency Bits[31:24]',
+    group: 'sd_fsc',
+    fields: [
+      {
+        name: 'Frequency Value',
+        description: 'Subcarrier Frequency Bits[31:24]',
+        bitStart: 0,
+        bitEnd: 7,
+        type: 'hex',
+      },
+    ],
+    resetValue: 0x21,
   },
 ]

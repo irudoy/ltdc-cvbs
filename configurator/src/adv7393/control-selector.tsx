@@ -1,19 +1,16 @@
-import React, { useState, useEffect } from 'react'
-import { Select, Checkbox, InputNumber, type InputNumberProps } from 'antd'
-import { getFieldValue, setFieldValue } from './state'
+import { useState, useEffect } from 'react'
+import { Select, Checkbox, InputNumber } from 'antd'
+import { getFieldValue, setFieldValue } from './utils'
 import type { RegisterField } from './types'
+import { InputHex } from './atoms'
 
-type ControlSelectorProps = {
+type Props = {
   field: RegisterField
   registerValue: number
   onChange: (newValue: number) => void
 }
 
-export const ControlSelector: React.FC<ControlSelectorProps> = ({
-  field,
-  registerValue,
-  onChange,
-}) => {
+export const ControlSelector = ({ field, registerValue, onChange }: Props) => {
   const initialValue = getFieldValue(
     registerValue,
     field.bitStart,
@@ -42,7 +39,12 @@ export const ControlSelector: React.FC<ControlSelectorProps> = ({
   switch (field.type) {
     case 'enum':
       return (
-        <Select value={value} onChange={(val) => handleChange(val)}>
+        <Select
+          size="small"
+          className="min-w-48 text-left"
+          value={value}
+          onChange={(val) => handleChange(val)}
+        >
           {field.options?.map((option) => (
             <Select.Option key={option.value} value={option.value}>
               {option.label}
@@ -60,29 +62,27 @@ export const ControlSelector: React.FC<ControlSelectorProps> = ({
     case 'int':
       return (
         <InputNumber
+          className="min-w-48"
+          size="small"
           type="number"
           value={value}
+          min={0}
+          max={255}
           onChange={(value) => handleChange(value ?? 0)}
         />
       )
     case 'hex':
       return (
         <InputHex
+          className="min-w-48"
+          size="small"
           value={value}
+          min={0}
+          max={255}
           onChange={(value) => handleChange(Number(value ?? 0))}
         />
       )
     default:
       return null
   }
-}
-
-function InputHex(props: InputNumberProps) {
-  return (
-    <InputNumber
-      {...props}
-      formatter={(value) => `0x${Number(value).toString(16).toUpperCase()}`}
-      parser={(value) => parseInt(value?.replace(/^0x/i, '') || '0', 16)}
-    />
-  )
 }
