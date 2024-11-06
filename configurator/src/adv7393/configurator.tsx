@@ -4,7 +4,6 @@ import { DownloadOutlined, UploadOutlined } from '@ant-design/icons'
 import { type MessageInParsed, DataTypeIn } from '../api'
 import { useStm32Serial } from '../serial-stm32'
 import { RegisterItem } from './register-item'
-import { combineBytes } from './state'
 import { configRegisters } from './config'
 
 export const RegisterConfigurator = () => {
@@ -18,11 +17,10 @@ export const RegisterConfigurator = () => {
     )
   )
 
-  const handleRegisterChange = (startAddress: string, newValues: number[]) => {
-    const combinedValue = combineBytes(newValues)
+  const handleRegisterChange = (startAddress: number, newValue: number) => {
     setValues((prevValues) => ({
       ...prevValues,
-      [startAddress]: combinedValue,
+      [startAddress]: newValue,
     }))
   }
 

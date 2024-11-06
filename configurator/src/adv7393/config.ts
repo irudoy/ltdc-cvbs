@@ -2,13 +2,13 @@ import type { Register } from './types'
 
 export const configRegisters: Register[] = [
   {
-    address: '0x80',
+    address: 0x80,
     name: 'SD Mode Register 1',
     fields: [
       {
         name: 'SD Standard',
-        bitStart: 5,
-        bitEnd: 7,
+        bitStart: 0,
+        bitEnd: 1,
         type: 'enum',
         options: [
           { value: 0, label: 'NTSC' },
@@ -35,35 +35,38 @@ export const configRegisters: Register[] = [
       },
       {
         name: 'SD Chroma Filter',
-        bitStart: 0,
-        bitEnd: 1,
+        bitStart: 5,
+        bitEnd: 7,
         type: 'enum',
         options: [
           { value: 0, label: '1.3 MHz' },
           { value: 1, label: '0.65 MHz' },
           { value: 2, label: '1.0 MHz' },
           { value: 3, label: '2.0 MHz' },
+          { value: 4, label: 'Reserved' },
+          { value: 5, label: 'Chroma CIF' },
+          { value: 6, label: 'Chroma QCIF' },
+          { value: 7, label: '3.0 MHz' },
         ],
       },
     ],
     resetValue: 0x10,
   },
   {
-    address: '0x8C',
+    address: 0x8c,
     name: 'Subcarrier Frequency',
     fields: [
       {
         name: 'Frequency Value',
         bitStart: 0,
-        bitEnd: 31,
-        type: 'int',
-        byteCount: 4, // Значение занимает 4 байта (0x8C, 0x8D, 0x8E, 0x8F)
+        bitEnd: 7,
+        type: 'hex',
       },
     ],
-    resetValue: 0x1f7c0f21, // Пример 32-битного значения по умолчанию
+    resetValue: 0x21,
   },
   {
-    address: '0x00',
+    address: 0x00,
     name: 'Power Mode',
     fields: [
       {
@@ -100,7 +103,7 @@ export const configRegisters: Register[] = [
     resetValue: 0x12,
   },
   {
-    address: '0x01',
+    address: 0x01,
     name: 'Mode Select',
     fields: [
       {
@@ -135,7 +138,7 @@ export const configRegisters: Register[] = [
     resetValue: 0x00,
   },
   {
-    address: '0x02',
+    address: 0x02,
     name: 'Mode Register 0',
     fields: [
       {

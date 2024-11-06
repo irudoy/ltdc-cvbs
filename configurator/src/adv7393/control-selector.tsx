@@ -1,28 +1,24 @@
 import React, { useState, useEffect } from 'react'
-import { Select, Checkbox, Input } from 'antd'
-import {
-  combineBytes,
-  getFieldValue,
-  setFieldValue,
-  splitToBytes,
-} from './state'
+import { Select, Checkbox, InputNumber, type InputNumberProps } from 'antd'
+import { getFieldValue, setFieldValue } from './state'
 import type { RegisterField } from './types'
 
 type ControlSelectorProps = {
   field: RegisterField
-  registerValues: number[]
-  onChange: (newValues: number[]) => void
+  registerValue: number
+  onChange: (newValue: number) => void
 }
 
 export const ControlSelector: React.FC<ControlSelectorProps> = ({
   field,
-  registerValues,
+  registerValue,
   onChange,
 }) => {
-  const initialValue =
-    field.byteCount && field.byteCount > 1
-      ? combineBytes(registerValues.slice(0, field.byteCount))
-      : getFieldValue(registerValues[0], field.bitStart, field.bitEnd)
+  const initialValue = getFieldValue(
+    registerValue,
+    field.bitStart,
+    field.bitEnd
+  )
 
   const [value, setValue] = useState(initialValue)
 
@@ -33,18 +29,14 @@ export const ControlSelector: React.FC<ControlSelectorProps> = ({
   const handleChange = (newVal: number) => {
     setValue(newVal)
 
-    if (field.byteCount && field.byteCount > 1) {
-      const newValues = splitToBytes(newVal, field.byteCount)
-      onChange(newValues)
-    } else {
-      const updatedRegisterValue = setFieldValue(
-        registerValues[0],
-        field.bitStart,
-        field.bitEnd,
-        newVal
-      )
-      onChange([updatedRegisterValue])
-    }
+    const updatedRegisterValue = setFieldValue(
+      registerValue,
+      field.bitStart,
+      field.bitEnd,
+      newVal
+    )
+
+    onChange(updatedRegisterValue)
   }
 
   switch (field.type) {
@@ -67,13 +59,30 @@ export const ControlSelector: React.FC<ControlSelectorProps> = ({
       )
     case 'int':
       return (
-        <Input
+        <InputNumber
           type="number"
           value={value}
-          onChange={(e) => handleChange(parseInt(e.target.value, 10))}
+          onChange={(value) => handleChange(value ?? 0)}
+        />
+      )
+    case 'hex':
+      return (
+        <InputHex
+          value={value}
+          onChange={(value) => handleChange(Number(value ?? 0))}
         />
       )
     default:
       return null
   }
+}
+
+function InputHex(props: InputNumberProps) {
+  return (
+    <InputNumber
+      {...props}
+      formatter={(value) => `0x${Number(value).toString(16).toUpperCase()}`}
+      parser={(value) => parseInt(value?.replace(/^0x/i, '') || '0', 16)}
+    />
+  )
 }
