@@ -21,12 +21,15 @@ export const RegisterConfigurator = () => {
     )
   )
 
-  const handleRegisterChange = (startAddress: number, newValue: number) => {
-    setValues((prevValues) => ({
-      ...prevValues,
-      [startAddress]: newValue,
-    }))
-  }
+  const handleRegisterChange = useCallback(
+    (startAddress: number, newValue: number) => {
+      setValues((prevValues) => ({
+        ...prevValues,
+        [startAddress]: newValue,
+      }))
+    },
+    []
+  )
 
   useEffect(() => {
     console.log('New register values:', values)
