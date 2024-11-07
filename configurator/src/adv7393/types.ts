@@ -4,16 +4,21 @@ export type RegisterField = {
   bitStart: number
   bitEnd: number
   type: 'enum' | 'boolean' | 'int' | 'hex'
+  booleanDescription?: {
+    true: string
+    false: string
+  }
   options?: { value: number; label: string }[]
+  readonly?: boolean
 }
 
 export type Register = {
   name: string
   description?: string
   address: number
-  fields: RegisterField[]
   resetValue: number
   group?: string
+  fields: RegisterField[]
 }
 
 export type RegisterGroup = {

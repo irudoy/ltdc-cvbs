@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Select, Checkbox, InputNumber } from 'antd'
+import { Select, Checkbox, InputNumber, Tooltip } from 'antd'
 import { getFieldValue, setFieldValue } from './utils'
 import type { RegisterField } from './types'
 import { InputHex } from './atoms'
@@ -44,6 +44,7 @@ export const ControlSelector = ({ field, registerValue, onChange }: Props) => {
           className="min-w-48 text-left"
           value={value}
           onChange={(val) => handleChange(val)}
+          disabled={field.readonly}
         >
           {field.options?.map((option) => (
             <Select.Option key={option.value} value={option.value}>
@@ -54,10 +55,19 @@ export const ControlSelector = ({ field, registerValue, onChange }: Props) => {
       )
     case 'boolean':
       return (
-        <Checkbox
-          checked={Boolean(value)}
-          onChange={(e) => handleChange(e.target.checked ? 1 : 0)}
-        />
+        <Tooltip
+          title={
+            value
+              ? field.booleanDescription?.true
+              : field.booleanDescription?.false
+          }
+        >
+          <Checkbox
+            checked={Boolean(value)}
+            onChange={(e) => handleChange(e.target.checked ? 1 : 0)}
+            disabled={field.readonly}
+          />
+        </Tooltip>
       )
     case 'int':
       return (
@@ -69,6 +79,7 @@ export const ControlSelector = ({ field, registerValue, onChange }: Props) => {
           min={0}
           max={255}
           onChange={(value) => handleChange(value ?? 0)}
+          disabled={field.readonly}
         />
       )
     case 'hex':
@@ -80,6 +91,7 @@ export const ControlSelector = ({ field, registerValue, onChange }: Props) => {
           min={0}
           max={255}
           onChange={(value) => handleChange(Number(value ?? 0))}
+          disabled={field.readonly}
         />
       )
     default:

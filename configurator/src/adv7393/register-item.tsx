@@ -63,6 +63,11 @@ export const RegisterItem = ({ register, value, onRegisterChange }: Props) => {
           bitEnd,
           register.resetValue
         )
+
+        let description = field.description
+        if (field.type === 'boolean' && field.booleanDescription) {
+          description = `${description ? description + '; ' : ''}0 - ${field.booleanDescription.true}; 1 - ${field.booleanDescription.false}`
+        }
         return (
           <List.Item key={name}>
             <label className="w-full flex gap-2">
@@ -73,15 +78,11 @@ export const RegisterItem = ({ register, value, onRegisterChange }: Props) => {
                     : `b${bitStart}:${bitEnd}`}
                 </Typography.Text>
                 {dirty ? <b>{name} *</b> : name}
-                {field.description && (
-                  <Typography.Text
-                    type="secondary"
-                    ellipsis
-                    title={field.description}
-                  >
-                    {field.description}
+                <Tooltip title={description}>
+                  <Typography.Text type="secondary" ellipsis>
+                    {description}
                   </Typography.Text>
-                )}
+                </Tooltip>
               </div>
               <div className="text-right">
                 <ControlSelector
