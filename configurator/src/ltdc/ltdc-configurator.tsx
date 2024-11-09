@@ -6,7 +6,12 @@ import {
   UploadOutlined,
 } from '@ant-design/icons'
 import type { InputNumberProps } from 'antd'
-import { DataTypeIn, getConfig, pushConfig, MessageInParsed } from '../api'
+import {
+  DataTypeIn,
+  getLTDCConfig,
+  pushLTDCConfig,
+  MessageInParsed,
+} from '../api'
 import type { ConfigStateEnhanced, ComputedState, State } from '../types'
 import { useStm32Serial } from '../serial-stm32'
 import { FrameViz } from './frame-viz'
@@ -155,7 +160,7 @@ export function LtdcConfigurator() {
 
   useEffect(() => {
     if (liveUpdate) {
-      sendMessage(pushConfig(state))
+      sendMessage(pushLTDCConfig(state))
     }
   }, [liveUpdate, state, sendMessage])
 
@@ -169,14 +174,14 @@ export function LtdcConfigurator() {
           <Button
             icon={<DownloadOutlined />}
             disabled={disabled}
-            onClick={() => sendMessage(getConfig())}
+            onClick={() => sendMessage(getLTDCConfig())}
           >
             Get config
           </Button>
           <Button
             icon={<UploadOutlined />}
             disabled={disabled}
-            onClick={() => sendMessage(pushConfig(state))}
+            onClick={() => sendMessage(pushLTDCConfig(state))}
           >
             Push config
           </Button>

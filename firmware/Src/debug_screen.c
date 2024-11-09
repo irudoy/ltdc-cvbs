@@ -24,8 +24,6 @@ void DEBUG_SCREEN_init(RNG_HandleTypeDef *h) {
 }
 
 void DEBUG_SCREEN_tick() {
-  uint8_t shouldSkip = 0;
-
   if (currentScreen != nextScreen) {
     switch (nextScreen) {
       case 0: {
@@ -57,26 +55,26 @@ void DEBUG_SCREEN_tick() {
         DISP_DrawBitmap(get_philips_pm5544_320_240(), 320, 240, 0, 1);
         break;
       }
-//      case 7: {
-//        DISP_FillScreen(DISP_COLOR_BLACK);
+      case 7: {
+        DISP_FillScreen(DISP_COLOR_BLACK);
 //        DISP_DrawBitmap(get_smpte_color_bars_320_240(), 320, 240, 0, 1);
-//        break;
-//      }
-//      case 8: {
-//        DISP_FillScreen(DISP_COLOR_BLACK);
+        break;
+      }
+      case 8: {
+        DISP_FillScreen(DISP_COLOR_BLACK);
 //        DISP_DrawBitmap(get_screen_mfd_single_317x186(), 317, 186, 0, 1);
-//        break;
-//      }
-//      case 9: {
-//        DISP_FillScreen(DISP_COLOR_BLACK);
+        break;
+      }
+      case 9: {
+        DISP_FillScreen(DISP_COLOR_BLACK);
 //        DISP_DrawBitmap(get_screen_mfd_multi_317_185(), 317, 185, 0, 1);
-//        break;
-//      }
-//      case 10: {
-//        DISP_FillScreen(DISP_COLOR_BLACK);
+        break;
+      }
+      case 10: {
+        DISP_FillScreen(DISP_COLOR_BLACK);
 //        DISP_DrawBitmap(get_fox_240x320(), 240, 320, 1, 0);
-//        break;
-//      }
+        break;
+      }
       case 11: {
         for (uint16_t i = 0; i < 100; i++) {
           DISP_FillRect(
@@ -96,15 +94,11 @@ void DEBUG_SCREEN_tick() {
         break;
       }
       default: {
-        nextScreen++;
-        shouldSkip = 1;
         break;
       }
     }
 
-    if (!shouldSkip) {
-      currentScreen = nextScreen;
-    }
+    currentScreen = nextScreen;
   }
 }
 

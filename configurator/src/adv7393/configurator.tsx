@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Checkbox } from 'antd'
 import { DownloadOutlined, UploadOutlined } from '@ant-design/icons'
-import { type MessageInParsed, DataTypeIn } from '../api'
+import {
+  type MessageInParsed,
+  DataTypeIn,
+  getAdv7393Config,
+  pushAdv7393Config,
+} from '../api'
 import { useStm32Serial } from '../serial-stm32'
 import type { Register } from './types'
 import { configRegisters as config } from './config'
@@ -10,14 +15,14 @@ import { RegisterGroup } from './register-group'
 import { combineBytes, splitToBytes } from './utils'
 
 export const RegisterConfigurator = () => {
-  const [values, setValues] = useState<{ [key: string]: number }>(() =>
+  const [values, setValues] = useState<{ [key: number]: number }>(() =>
     config.reduce(
       (acc, reg) => {
         if ('type' in reg) return acc
         acc[reg.address] = reg.resetValue
         return acc
       },
-      {} as { [key: string]: number }
+      {} as { [key: number]: number }
     )
   )
 
@@ -36,9 +41,10 @@ export const RegisterConfigurator = () => {
   }, [values])
 
   const handleMessageReceive = useCallback((m: MessageInParsed) => {
-    // if (m.type === DataTypeIn.LTDC_CLK_CONFIG) {
-    //   setValues({})
-    // }
+    if (m.type === DataTypeIn.ADV7393_CONFIG) {
+      const dataObject = Object.fromEntries(m.data.entries())
+      setValues(dataObject)
+    }
   }, [])
 
   const { portState, sendMessage } = useStm32Serial(handleMessageReceive)
@@ -47,9 +53,9 @@ export const RegisterConfigurator = () => {
 
   useEffect(() => {
     if (liveUpdate) {
-      // sendMessage())
+      sendMessage(pushAdv7393Config(values))
     }
-  }, [liveUpdate, sendMessage])
+  }, [liveUpdate, sendMessage, values])
 
   const disabled = portState !== 'open'
 
@@ -61,14 +67,20 @@ export const RegisterConfigurator = () => {
           <Button
             icon={<DownloadOutlined />}
             disabled={disabled}
-            onClick={() => null}
+            onClick={() =>
+              sendMessage(
+                getAdv7393Config(
+                  Object.keys(values).map((address) => parseInt(address, 10))
+                )
+              )
+            }
           >
             Get config
           </Button>
           <Button
             icon={<UploadOutlined />}
             disabled={disabled}
-            onClick={() => null}
+            onClick={() => sendMessage(pushAdv7393Config(values))}
           >
             Push config
           </Button>

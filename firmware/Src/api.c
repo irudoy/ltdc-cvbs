@@ -1,24 +1,29 @@
 #include "api.h"
 #include "debug_screen.h"
 #include "disp.h"
+#include "adv7393.h"
 
 #define PACKET_SIZE 64
 
 static uint8_t rxBuffer[PACKET_SIZE];
+static uint8_t txBuffer[PACKET_SIZE];
 static UART_HandleTypeDef *uartHandle;
 
 enum CommandOut {
-  NEXT_SCREEN = 0x01,
-  PREV_SCREEN = 0x02,
-  GET_CONFIG = 0x03,
-  PUSH_CONFIG = 0x04,
-  GET_CLK_CONFIG = 0x05,
-  PUSH_CLK_CONFIG = 0x06,
+  NEXT_SCREEN = 0xc1,
+  PREV_SCREEN = 0xc2,
+  GET_CONFIG = 0xc3,
+  PUSH_CONFIG = 0xc4,
+  GET_CLK_CONFIG = 0xc5,
+  PUSH_CLK_CONFIG = 0xc6,
+  GET_ADV7393_CONFIG = 0xc7,
+  PUSH_ADV7393_CONFIG = 0xc8,
 };
 
 enum DataTypeIn {
-  LTDC_CONFIG = 0x01,
-  LTDC_CLK_CONFIG = 0x02,
+  LTDC_CONFIG = 0xf1,
+  LTDC_CLK_CONFIG = 0xf2,
+  ADV7393_CONFIG = 0xf3,
 };
 
 void API_Init(UART_HandleTypeDef *huart) {
@@ -26,11 +31,32 @@ void API_Init(UART_HandleTypeDef *huart) {
   HAL_UART_Receive_IT(uartHandle, rxBuffer, PACKET_SIZE);
 }
 
-HAL_StatusTypeDef API_transmit(uint8_t *pData, uint16_t size) {
-  return HAL_UART_Transmit(uartHandle, pData, size, 1000);
+HAL_StatusTypeDef API_transmit(const uint8_t *pData, uint16_t size) {
+  uint8_t crc = 0;
+  for (int i = 0; i < PACKET_SIZE - 1; i++) {
+    txBuffer[i] = i < size ? pData[i] : 0xFF;
+    crc += txBuffer[i];
+  }
+  txBuffer[PACKET_SIZE - 1] = crc;
+  return HAL_UART_Transmit(uartHandle, txBuffer, PACKET_SIZE, 2000);
+}
+
+static uint8_t checkCrc() {
+  uint8_t crc = 0;
+  for (int i = 0; i < PACKET_SIZE - 1; i++) {
+    crc += rxBuffer[i];
+  }
+  return crc == rxBuffer[PACKET_SIZE - 1];
 }
 
 static void API_parsePacket() {
+  uint8_t crcCorrect = checkCrc();
+  if (!crcCorrect) {
+    return;
+  }
+
+  uint8_t payloadSize = rxBuffer[1];
+
   switch (rxBuffer[0]) {
     case NEXT_SCREEN: {
       DEBUG_SCREEN_next();
@@ -73,16 +99,16 @@ static void API_parsePacket() {
     }
     case PUSH_CONFIG: {
       DISP_LTDC_ConfigTypeDef cfg = {
-          .HorizontalSync = (uint32_t) (rxBuffer[1] | rxBuffer[2] << 8 | rxBuffer[3] << 16 | rxBuffer[4] << 24),
-          .VerticalSync = (uint32_t) (rxBuffer[5] | rxBuffer[6] << 8 | rxBuffer[7] << 16 | rxBuffer[8] << 24),
-          .AccumulatedHBP = (uint32_t) (rxBuffer[9] | rxBuffer[10] << 8 | rxBuffer[11] << 16 | rxBuffer[12] << 24),
-          .AccumulatedVBP = (uint32_t) (rxBuffer[13] | rxBuffer[14] << 8 | rxBuffer[15] << 16 | rxBuffer[16] << 24),
-          .AccumulatedActiveW = (uint32_t) (rxBuffer[17] | rxBuffer[18] << 8 | rxBuffer[19] << 16 | rxBuffer[20] << 24),
-          .AccumulatedActiveH = (uint32_t) (rxBuffer[21] | rxBuffer[22] << 8 | rxBuffer[23] << 16 | rxBuffer[24] << 24),
-          .TotalWidth = (uint32_t) (rxBuffer[25] | rxBuffer[26] << 8 | rxBuffer[27] << 16 | rxBuffer[28] << 24),
-          .TotalHeight = (uint32_t) (rxBuffer[29] | rxBuffer[30] << 8 | rxBuffer[31] << 16 | rxBuffer[32] << 24),
-          .ImageWidth = (uint32_t) (rxBuffer[33] | rxBuffer[34] << 8 | rxBuffer[35] << 16 | rxBuffer[36] << 24),
-          .ImageHeight = (uint32_t) (rxBuffer[37] | rxBuffer[38] << 8 | rxBuffer[39] << 16 | rxBuffer[40] << 24),
+          .HorizontalSync = (uint32_t) (rxBuffer[2] | rxBuffer[3] << 8 | rxBuffer[4] << 16 | rxBuffer[5] << 24),
+          .VerticalSync = (uint32_t) (rxBuffer[6] | rxBuffer[7] << 8 | rxBuffer[8] << 16 | rxBuffer[9] << 24),
+          .AccumulatedHBP = (uint32_t) (rxBuffer[10] | rxBuffer[11] << 8 | rxBuffer[12] << 16 | rxBuffer[13] << 24),
+          .AccumulatedVBP = (uint32_t) (rxBuffer[14] | rxBuffer[15] << 8 | rxBuffer[16] << 16 | rxBuffer[17] << 24),
+          .AccumulatedActiveW = (uint32_t) (rxBuffer[18] | rxBuffer[19] << 8 | rxBuffer[20] << 16 | rxBuffer[21] << 24),
+          .AccumulatedActiveH = (uint32_t) (rxBuffer[22] | rxBuffer[23] << 8 | rxBuffer[24] << 16 | rxBuffer[25] << 24),
+          .TotalWidth = (uint32_t) (rxBuffer[26] | rxBuffer[27] << 8 | rxBuffer[28] << 16 | rxBuffer[29] << 24),
+          .TotalHeight = (uint32_t) (rxBuffer[30] | rxBuffer[31] << 8 | rxBuffer[32] << 16 | rxBuffer[33] << 24),
+          .ImageWidth = (uint32_t) (rxBuffer[34] | rxBuffer[35] << 8 | rxBuffer[36] << 16 | rxBuffer[37] << 24),
+          .ImageHeight = (uint32_t) (rxBuffer[38] | rxBuffer[39] << 8 | rxBuffer[40] << 16 | rxBuffer[41] << 24),
       };
 
       DISP_reInit(&cfg);
@@ -114,9 +140,9 @@ static void API_parsePacket() {
     }
     case PUSH_CLK_CONFIG: {
       DISP_LTDC_ClockConfigTypeDef cfg = {
-          .PLLSAIN = (uint32_t) (rxBuffer[1] | rxBuffer[2] << 8 | rxBuffer[3] << 16 | rxBuffer[4] << 24),
-          .PLLSAIR = (uint32_t) (rxBuffer[5] | rxBuffer[6] << 8 | rxBuffer[7] << 16 | rxBuffer[8] << 24),
-          .PLLSAIDivR = (uint32_t) (rxBuffer[9] | rxBuffer[10] << 8 | rxBuffer[11] << 16 | rxBuffer[12] << 24),
+          .PLLSAIN = (uint32_t) (rxBuffer[2] | rxBuffer[3] << 8 | rxBuffer[4] << 16 | rxBuffer[5] << 24),
+          .PLLSAIR = (uint32_t) (rxBuffer[6] | rxBuffer[7] << 8 | rxBuffer[8] << 16 | rxBuffer[9] << 24),
+          .PLLSAIDivR = (uint32_t) (rxBuffer[10] | rxBuffer[11] << 8 | rxBuffer[12] << 16 | rxBuffer[13] << 24),
       };
 
       switch (cfg.PLLSAIDivR) {
@@ -139,6 +165,33 @@ static void API_parsePacket() {
       DISP_Set_Clock_Config(&cfg);
       break;
     }
+    case GET_ADV7393_CONFIG: {
+      uint8_t size = payloadSize * 2;
+      uint8_t data[PACKET_SIZE] = {
+          ADV7393_CONFIG,
+          size,
+      };
+
+      for (uint8_t i = 0; i < payloadSize; i++) {
+        data[2 + i * 2] = rxBuffer[2 + i];
+        data[3 + i * 2] = ADV7393_readReg(rxBuffer[2 + i]);
+      }
+
+      API_transmit(data, size + 2);
+      break;
+    }
+    case PUSH_ADV7393_CONFIG: {
+      for (uint8_t i = 0; i < payloadSize / 2; i++) {
+        uint8_t reg = rxBuffer[2 + i * 2];
+//        volatile uint8_t currValue = ADV7393_readReg(reg);
+        uint8_t newValue = rxBuffer[3 + i * 2];
+//        if (newValue != currValue) {
+//          HAL_Delay(1);
+//        }
+        ADV7393_writeReg(reg, newValue);
+      }
+      break;
+    }
     default:
       break;
   }
@@ -149,6 +202,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     return;
   }
 
-  HAL_UART_Receive_IT(uartHandle, rxBuffer, PACKET_SIZE);
   API_parsePacket();
+  HAL_UART_Receive_IT(uartHandle, rxBuffer, PACKET_SIZE);
 }

@@ -1,6 +1,6 @@
 import type { ConfigState, ClkState } from './types'
 
-const MESSAGE_OUT_SIZE = 64
+const MESSAGE_SIZE = 64
 
 export type MessageOut = Uint8Array
 export type MessageIn = {
@@ -10,17 +10,20 @@ export type MessageIn = {
 }
 
 enum CommandOut {
-  NEXT_SCREEN = 0x01,
-  PREV_SCREEN = 0x02,
-  GET_CONFIG = 0x03,
-  PUSH_CONFIG = 0x04,
-  GET_CLK_CONFIG = 0x05,
-  PUSH_CLK_CONFIG = 0x06,
+  NEXT_SCREEN = 0xc1,
+  PREV_SCREEN = 0xc2,
+  GET_CONFIG = 0xc3,
+  PUSH_CONFIG = 0xc4,
+  GET_CLK_CONFIG = 0xc5,
+  PUSH_CLK_CONFIG = 0xc6,
+  GET_ADV7393_CONFIG = 0xc7,
+  PUSH_ADV7393_CONFIG = 0xc8,
 }
 
 export enum DataTypeIn {
-  LTDC_CONFIG = 0x01,
-  LTDC_CLK_CONFIG = 0x02,
+  LTDC_CONFIG = 0xf1,
+  LTDC_CLK_CONFIG = 0xf2,
+  ADV7393_CONFIG = 0xf3,
 }
 
 type MessageLTDCConfig = {
@@ -44,11 +47,28 @@ type MessageClkConfig = {
   pllSaiDivR: number
 }
 
-export type MessageInParsed = MessageLTDCConfig | MessageClkConfig
+type MessageADV7393Config = {
+  type: DataTypeIn.ADV7393_CONFIG
+  data: Map<number, number>
+}
+
+export type MessageInParsed =
+  | MessageLTDCConfig
+  | MessageClkConfig
+  | MessageADV7393Config
+
+function calcCrc(data: Uint8Array): number {
+  let crc = 0
+  for (let i = 0; i < data.length - 1; i++) {
+    crc += data[i]
+  }
+  return crc & 0xff
+}
 
 function createPacket(command: CommandOut, payload?: Uint8Array): MessageOut {
-  const message = new Uint8Array(MESSAGE_OUT_SIZE)
-  message.set([command, ...(payload ?? [])])
+  const message = new Uint8Array(MESSAGE_SIZE)
+  message.set([command, ...(payload ? [payload.length, ...payload] : [])])
+  message.set([calcCrc(message)], MESSAGE_SIZE - 1)
   return message
 }
 
@@ -60,7 +80,7 @@ export function prevScreen(): MessageOut {
   return createPacket(CommandOut.PREV_SCREEN)
 }
 
-export function getConfig(): MessageOut {
+export function getLTDCConfig(): MessageOut {
   return createPacket(CommandOut.GET_CONFIG)
 }
 
@@ -68,7 +88,11 @@ export function getClkConfig(): MessageOut {
   return createPacket(CommandOut.GET_CLK_CONFIG)
 }
 
-export function pushConfig(s: ConfigState): MessageOut {
+export function getAdv7393Config(registers: number[]): MessageOut {
+  return createPacket(CommandOut.GET_ADV7393_CONFIG, new Uint8Array(registers))
+}
+
+export function pushLTDCConfig(s: ConfigState): MessageOut {
   const horizontalSync = s.hSyncWidth - 1
   const verticalSync = s.vSyncHeight - 1
   const accumulatedHBP = s.hBackPorch + horizontalSync
@@ -105,39 +129,42 @@ export function pushClkConfig(s: ClkState): MessageOut {
   return createPacket(CommandOut.PUSH_CLK_CONFIG, payload)
 }
 
+export function pushAdv7393Config(data: Record<number, number>): MessageOut {
+  const entries = Object.entries(data)
+  const payload = new Uint8Array(entries.length * 2)
+
+  let i = 0
+  for (const [address, value] of entries) {
+    payload[i++] = parseInt(address, 10)
+    payload[i++] = value
+  }
+
+  return createPacket(CommandOut.PUSH_ADV7393_CONFIG, payload)
+}
+
 export function createMessageReader(
   onMessageReceive: (message: MessageIn) => void
 ): (chunk: Uint8Array) => void {
-  let buffer: Uint8Array | null = null
-  let type: number | null = null
-  let size: number | null = null
-  let bytesRead = 0
+  let buffer = new Uint8Array(0)
 
   return function readChunk(chunk: Uint8Array) {
-    if (!buffer) {
-      type = chunk[0]
-      size = chunk[1]
-      buffer = new Uint8Array(size)
-      buffer.set(chunk.subarray(2))
-      bytesRead = chunk.length - 2
-    } else {
-      try {
-        buffer.set(chunk, bytesRead)
-      } catch (e) {
-        console.error(
-          'Failed to set buffer',
-          { chunk, chunkLength: chunk.length, type, size, buffer, bytesRead },
-          e
-        )
-        throw e
-      }
-      bytesRead += chunk.length
-    }
+    buffer = new Uint8Array([...buffer, ...chunk])
 
-    if (bytesRead === size) {
-      onMessageReceive({ type: type!, size: size!, data: buffer })
-      buffer = null
-      bytesRead = 0
+    while (buffer.length >= MESSAGE_SIZE) {
+      const message = buffer.slice(0, MESSAGE_SIZE)
+      buffer = buffer.slice(MESSAGE_SIZE)
+
+      const crc = calcCrc(message)
+      if (crc !== message[MESSAGE_SIZE - 1]) {
+        console.error('CRC mismatch', crc, message[MESSAGE_SIZE - 1], message)
+        continue
+      }
+
+      const type = message[0]
+      const size = message[1]
+      const data = message.slice(2, 2 + size)
+
+      onMessageReceive({ type, size, data })
     }
   }
 }
@@ -196,6 +223,14 @@ export function parseMessageIn(m: MessageIn): MessageInParsed {
         pllSaiR,
         pllSaiDivR,
       }
+    }
+    case DataTypeIn.ADV7393_CONFIG: {
+      const data = new Map<number, number>()
+      for (let i = 0; i < m.size; i += 2) {
+        data.set(m.data[i], m.data[i + 1])
+      }
+      console.log(m, data)
+      return { type: DataTypeIn.ADV7393_CONFIG, data }
     }
     default:
       throw new Error(`Unknown message type ${m.type}`)

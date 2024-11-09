@@ -6,13 +6,13 @@
 
 static I2C_HandleTypeDef *hi2c;
 
-static uint8_t read(uint8_t reg) {
+uint8_t ADV7393_readReg(uint8_t reg) {
   uint8_t value = 0;
   HAL_I2C_Mem_Read(hi2c, ADV7393_I2C_ADDR_R, (uint16_t) reg, I2C_MEMADD_SIZE_8BIT, &value, 1, I2C_TIMEOUT_MAX);
   return value;
 }
 
-static HAL_StatusTypeDef write(uint8_t reg, uint8_t value) {
+HAL_StatusTypeDef ADV7393_writeReg(uint8_t reg, uint8_t value) {
   return HAL_I2C_Mem_Write(hi2c, ADV7393_I2C_ADDR_W, (uint16_t) reg, I2C_MEMADD_SIZE_8BIT, &value, 1, I2C_TIMEOUT_MAX);
 }
 
@@ -24,7 +24,7 @@ void adv7393_init(I2C_HandleTypeDef *h) {
    * b1 - Software reset - Writing a 1 resets the device; this is a self-clearing bit.
    * b[2:7] - Reserved
    */
-  write(ADV7393_SW_RESET_REG, MB(ADV7393_SW_RESET_RST, 0b1, 1, 1));
+  ADV7393_writeReg(ADV7393_SW_RESET_REG, MB(ADV7393_SW_RESET_RST, 0b1, 1, 1));
 
   /**
    * b0 - SD PrPb SSAF filter
@@ -36,7 +36,7 @@ void adv7393_init(I2C_HandleTypeDef *h) {
    * b6 - SD pixel data valid
    * b7 - SD active video edge control
    */
-  write(ADV7393_SD_MODE_REG_2, MB(MB(MB(ADV7393_SD_MODE_REG_2_RST, 0b1, 4, 1), 0b1, 6, 1), 0b1, 7, 1));
+  ADV7393_writeReg(ADV7393_SD_MODE_REG_2, MB(MB(MB(ADV7393_SD_MODE_REG_2_RST, 0b1, 4, 1), 0b1, 6, 1), 0b1, 7, 1));
 
   /**
    * b0 - SD SFL/SCR/TR mode select
@@ -47,7 +47,8 @@ void adv7393_init(I2C_HandleTypeDef *h) {
    * b6 - SD color bars
    * b7 - SD luma/chroma swap
    */
-  write(ADV7393_SD_MODE_REG_4, COLOR_BARS == 1 ? MB(ADV7393_SD_MODE_REG_4_RST, 0b1, 6, 1) : ADV7393_SD_MODE_REG_4_RST);
+  ADV7393_writeReg(ADV7393_SD_MODE_REG_4,
+                   COLOR_BARS == 1 ? MB(ADV7393_SD_MODE_REG_4_RST, 0b1, 6, 1) : ADV7393_SD_MODE_REG_4_RST);
 
   /**
    * b[0:1] - NTSC color subcarrier adjust
@@ -69,7 +70,7 @@ void adv7393_init(I2C_HandleTypeDef *h) {
    * b6 - Reserved
    * b7 - SD RGB input enable
    */
-  write(ADV7393_SD_MODE_REG_6, MB(ADV7393_SD_MODE_REG_6_RST, 0b1, 7, 1));
+  ADV7393_writeReg(ADV7393_SD_MODE_REG_6, MB(ADV7393_SD_MODE_REG_6_RST, 0b1, 7, 1));
 
   /**
    * b0 - Reserved
@@ -80,7 +81,7 @@ void adv7393_init(I2C_HandleTypeDef *h) {
    * b6 - SD gamma correction enable
    * b7 - SD gamma correction curve select
    */
-  write(ADV7393_SD_MODE_REG_7, MB(MB(ADV7393_SD_MODE_REG_7_RST, 0b10, 3, 2), 0b1, 1, 1));
+  ADV7393_writeReg(ADV7393_SD_MODE_REG_7, MB(MB(ADV7393_SD_MODE_REG_7_RST, 0b10, 3, 2), 0b1, 1, 1));
 
   /**
    * b0 - SD slave/master mode (0b0 - slave, 0b1 - master)
@@ -90,13 +91,13 @@ void adv7393_init(I2C_HandleTypeDef *h) {
    * b6 - SD minimum luma value
    * b7 - SD timing reset
    */
-  write(ADV7393_SD_TIMING_REG_0, MB(ADV7393_SD_TIMING_REG_0_RST, 0b10, 1, 2));
+  ADV7393_writeReg(ADV7393_SD_TIMING_REG_0, MB(ADV7393_SD_TIMING_REG_0_RST, 0b10, 1, 2));
 }
 
 uint32_t ADV7393_readFsc(void) {
   uint32_t fsc = 0;
   for (int i = 0; i < 4; i++) {
-    fsc |= read(ADV7393_SD_FSC_REG_0 + i) << (i * 8);
+    fsc |= ADV7393_readReg(ADV7393_SD_FSC_REG_0 + i) << (i * 8);
   }
   return fsc;
 }
@@ -107,6 +108,6 @@ void ADV7393_writeFsc(uint32_t fsc) {
     fsc_bytes[i] = (fsc >> (i * 8)) & 0xFF;
   }
   for (int i = 0; i < 4; i++) {
-    write(ADV7393_SD_FSC_REG_0 + i, fsc_bytes[i]);
+    ADV7393_writeReg(ADV7393_SD_FSC_REG_0 + i, fsc_bytes[i]);
   }
 }

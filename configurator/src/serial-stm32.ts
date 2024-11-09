@@ -12,7 +12,7 @@ export const useStm32Serial = (rxCb?: (m: MessageInParsed) => void) => {
   const { connect, disconnect, subscribe, write, portState } = useSerial()
 
   const handleMessageReceive = useCallback(
-    function handleMessageReceive(m: MessageIn) {
+    (m: MessageIn) => {
       if (rxCb) {
         rxCb(parseMessageIn(m))
       }
@@ -35,10 +35,10 @@ export const useStm32Serial = (rxCb?: (m: MessageInParsed) => void) => {
     [write]
   )
 
-  const readMessageChunk = useMemo(
-    () => createMessageReader(handleMessageReceive),
-    [handleMessageReceive]
-  )
+  const readMessageChunk = useMemo(() => {
+    console.log('createMessageReader')
+    return createMessageReader(handleMessageReceive)
+  }, [handleMessageReceive])
 
   useEffect(() => {
     const unsubscribe = subscribe((message) => readMessageChunk(message.value))
