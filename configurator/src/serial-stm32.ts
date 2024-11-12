@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo } from 'react'
+import { useDebouncedCallback } from 'use-debounce'
 import { useSerial } from './serial'
 import {
   type MessageIn,
@@ -20,20 +21,17 @@ export const useStm32Serial = (rxCb?: (m: MessageInParsed) => void) => {
     [rxCb]
   )
 
-  const sendMessage = useCallback(
-    (data: MessageOut) => {
-      write(data)
-        .then((res) => {
-          if (!res) {
-            console.error('Failed to send message:', data)
-          } else {
-            console.log('Message sent:', data)
-          }
-        })
-        .catch(console.error)
-    },
-    [write]
-  )
+  const sendMessage = useDebouncedCallback((data: MessageOut) => {
+    write(data)
+      .then((res) => {
+        if (!res) {
+          console.error('Failed to send message:', data)
+        } else {
+          console.log('Message sent:', data)
+        }
+      })
+      .catch(console.error)
+  }, 100)
 
   const readMessageChunk = useMemo(() => {
     console.log('createMessageReader')

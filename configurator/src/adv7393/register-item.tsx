@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useCallback, useEffect, useState } from 'react'
 import { Button, List, Tooltip, Typography } from 'antd'
 import { UndoOutlined } from '@ant-design/icons'
 import type { Register } from './types'
@@ -9,14 +9,32 @@ import { Bytes } from './atoms'
 type Props = {
   register: Register
   value: number
+  updatedRegisters: Set<number>
   onRegisterChange: (startAddress: number, newValue: number) => void
 }
 
 export const RegisterItem = memo(
-  ({ register, value, onRegisterChange }: Props) => {
-    const handleFieldChange = (newValue: number) => {
-      onRegisterChange(register.address, newValue)
-    }
+  ({ register, value, updatedRegisters, onRegisterChange }: Props) => {
+    const handleFieldChange = useCallback(
+      (newValue: number) => {
+        onRegisterChange(register.address, newValue)
+      },
+      [register.address, onRegisterChange]
+    )
+
+    const [highlighted, setHighlighted] = useState(false)
+
+    useEffect(() => {
+      let timer: number
+      if (updatedRegisters.has(register.address)) {
+        setHighlighted(true)
+        timer = setTimeout(() => {
+          setHighlighted(false)
+          updatedRegisters.delete(register.address)
+        }, 500)
+      }
+      return () => clearTimeout(timer)
+    }, [updatedRegisters, register.address])
 
     return (
       <List
@@ -29,7 +47,11 @@ export const RegisterItem = memo(
               <Bytes className="text-lg">{register.address}</Bytes>
 
               <Tooltip title={register.description}>
-                <h3 className="text-lg font-bold">{register.name}</h3>
+                <h3
+                  className={`text-lg font-bold transition-all ${highlighted && 'text-lime-200'}`}
+                >
+                  {register.name}
+                </h3>
               </Tooltip>
 
               <div>

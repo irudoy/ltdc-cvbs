@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, Checkbox, Input, InputNumber, List, Card } from 'antd'
 import {
   DeleteOutlined,
@@ -12,12 +12,12 @@ import {
   pushLTDCConfig,
   MessageInParsed,
 } from '../api'
-import type { ConfigStateEnhanced, ComputedState, State } from '../types'
+import type { LTDCConfigState, LTDCComputedState, LTDCState } from '../types'
 import { useStm32Serial } from '../serial-stm32'
 import { FrameViz } from './frame-viz'
+import { useClockState } from '../store'
 
-const initialState: ConfigStateEnhanced = {
-  pixelClockMhz: 27 / 2,
+const initialState: LTDCConfigState = {
   hSyncWidth: 0,
   hBackPorch: 0,
   hFrontPorch: 0,
@@ -28,7 +28,7 @@ const initialState: ConfigStateEnhanced = {
   activeHeight: 0,
 }
 
-const computeState = (config: ConfigStateEnhanced): ComputedState => {
+function computeState(config: LTDCConfigState): LTDCComputedState {
   const totalWidth =
     config.hSyncWidth +
     config.hBackPorch +
@@ -57,28 +57,36 @@ const computeState = (config: ConfigStateEnhanced): ComputedState => {
     accVBackPorch: config.vSyncHeight + config.vBackPorch - 1,
     accActiveHeight,
     totalHeight,
-
-    frameRate: (config.pixelClockMhz * 1e6) / (totalWidth * totalHeight),
-    frameRate2:
-      (config.pixelClockMhz * 1e6) / ((totalWidth + 1) * (totalHeight + 1)),
   }
 }
 
+function useFrameRate(totalWidth: number, totalHeight: number) {
+  const {
+    clockState: { lcdTftClockFrequency },
+  } = useClockState()
+
+  return useMemo(() => {
+    const frameRate =
+      (lcdTftClockFrequency / (totalWidth + 1) / (totalHeight + 1)) * 1e6
+    return { frameRate, lcdTftClockFrequency }
+  }, [totalWidth, totalHeight, lcdTftClockFrequency])
+}
+
 const useConfigState = () => {
-  const [state, setState] = useState<State>({
+  const [state, setState] = useState<LTDCState>({
     ...initialState,
     ...computeState(initialState),
   })
   const [description, setDescription] = useState('')
   const [savedSets, setSavedSets] = useState<
-    { description: string; config: ConfigStateEnhanced }[]
+    { description: string; config: LTDCConfigState }[]
   >(() => {
     const saved = localStorage.getItem('savedSets')
     return saved ? JSON.parse(saved) : []
   })
 
   const handleInputChange =
-    (key: keyof ConfigStateEnhanced) => (value: string | number | null) => {
+    (key: keyof LTDCConfigState) => (value: string | number | null) => {
       if (value !== null) {
         setState((prevState) => {
           const newConfig = { ...prevState, [key]: Number(value) }
@@ -98,7 +106,7 @@ const useConfigState = () => {
     setDescription('')
   }
 
-  const loadSet = (config: ConfigStateEnhanced) => {
+  const loadSet = (config: LTDCConfigState) => {
     setState({
       ...config,
       ...computeState(config),
@@ -135,11 +143,15 @@ export function LtdcConfigurator() {
     deleteSet,
   } = useConfigState()
 
+  const { frameRate, lcdTftClockFrequency } = useFrameRate(
+    state.totalWidth,
+    state.totalHeight
+  )
+
   const handleMessageReceive = useCallback(
     (m: MessageInParsed) => {
       if (m.type === DataTypeIn.LTDC_CONFIG) {
         loadSet({
-          pixelClockMhz: state.pixelClockMhz,
           hSyncWidth: m.horizontalSync + 1,
           hBackPorch: m.accumulatedHBP - m.horizontalSync,
           hFrontPorch: m.totalWidth - m.accumulatedActiveW,
@@ -151,7 +163,7 @@ export function LtdcConfigurator() {
         })
       }
     },
-    [loadSet, state.pixelClockMhz]
+    [loadSet]
   )
 
   const { portState, sendMessage } = useStm32Serial(handleMessageReceive)
@@ -199,22 +211,10 @@ export function LtdcConfigurator() {
         <div>
           <TimingsInput
             label="Pixel Clock (MHz)"
-            min={1}
-            max={196}
-            step={0.0001}
-            value={state.pixelClockMhz}
-            onChange={handleInputChange('pixelClockMhz')}
-          />
-          <TimingsInput
             disabled
-            label="FPS"
-            value={state.frameRate.toFixed(2)}
+            value={lcdTftClockFrequency}
           />
-          <TimingsInput
-            disabled
-            label="FPS (2)"
-            value={state.frameRate2.toFixed(2)}
-          />
+          <TimingsInput disabled label="FPS" value={frameRate.toFixed(4)} />
         </div>
         <div>
           <TimingsInput
@@ -254,7 +254,7 @@ export function LtdcConfigurator() {
             <TimingsInput
               key={key}
               label={key}
-              value={state[key as keyof ComputedState]}
+              value={state[key as keyof LTDCComputedState]}
               disabled
             />
           ))}
@@ -297,7 +297,7 @@ export function LtdcConfigurator() {
             <TimingsInput
               key={key}
               label={key}
-              value={state[key as keyof ComputedState]}
+              value={state[key as keyof LTDCComputedState]}
               disabled
             />
           ))}

@@ -29,6 +29,8 @@ typedef struct DISP_LTDC_ConfigTypeDef {
 } DISP_LTDC_ConfigTypeDef;
 
 typedef struct DISP_LTDC_ClockConfigTypeDef {
+  uint32_t OSCSourceValue;
+  uint32_t PLLM;
   uint32_t PLLSAIN;
   uint32_t PLLSAIR;
   uint32_t PLLSAIDivR; // RCC_PLLSAIDIVR_2, RCC_PLLSAIDIVR_4, RCC_PLLSAIDIVR_8, RCC_PLLSAIDIVR_16

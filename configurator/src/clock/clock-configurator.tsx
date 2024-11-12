@@ -14,30 +14,25 @@ import {
   getClkConfig,
   MessageInParsed,
 } from '../api'
-import type { ClkState } from '../types'
+import type { ClkConfigState } from '../types'
 import { useStm32Serial } from '../serial-stm32'
+import { useClockState, PLL_SAI_DIV_R_MAP } from '../store'
 
 export function ClockConfigurator() {
-  const [state, setState] = useState<ClkState>({
-    pllSaiN: 0,
-    pllSaiR: 0,
-    pllSaiDivR: 0,
-  })
+  const { clockState: state, updateClockState: setState } = useClockState()
 
   const handleInputChange =
-    (key: keyof ClkState) => (value: string | number | null) => {
+    (key: keyof ClkConfigState) => (value: string | number | null) => {
       if (value !== null) {
-        setState((prev) => ({ ...prev, [key]: Number(value) }))
+        setState({
+          [key]: Number(value),
+        })
       }
     }
 
   const handleMessageReceive = useCallback((m: MessageInParsed) => {
     if (m.type === DataTypeIn.LTDC_CLK_CONFIG) {
-      setState({
-        pllSaiN: m.pllSaiN,
-        pllSaiR: m.pllSaiR,
-        pllSaiDivR: m.pllSaiDivR,
-      })
+      setState(m)
     }
   }, [])
 
@@ -85,6 +80,11 @@ export function ClockConfigurator() {
       <div className="grid grid-cols-3 gap-4 mb-3">
         <div className="col-span-1">
           <TimingsInput
+            label="LCD-TFT clock frequency"
+            disabled
+            value={state.lcdTftClockFrequency}
+          />
+          <TimingsInput
             label="PLL SAI *N"
             min={50}
             max={432}
@@ -101,21 +101,14 @@ export function ClockConfigurator() {
           <label>
             PLL SAI /DIVR
             <Select
+              options={Array.from(PLL_SAI_DIV_R_MAP).map(([value, label]) => ({
+                label,
+                value,
+              }))}
               value={state.pllSaiDivR}
               className="w-full"
               onChange={handleInputChange('pllSaiDivR')}
-            >
-              {[
-                [0, 2],
-                [1, 4],
-                [2, 8],
-                [3, 16],
-              ].map(([value, label]) => (
-                <Select.Option key={value} value={value}>
-                  {label}
-                </Select.Option>
-              ))}
-            </Select>
+            />
           </label>
         </div>
         <div className="col-span-2">

@@ -26,6 +26,10 @@ export const RegisterConfigurator = () => {
     )
   )
 
+  const [updatedRegisters, setUpdatedRegisters] = useState<Set<number>>(
+    new Set()
+  )
+
   const handleRegisterChange = useCallback(
     (startAddress: number, newValue: number) => {
       setValues((prevValues) => ({
@@ -44,6 +48,8 @@ export const RegisterConfigurator = () => {
     if (m.type === DataTypeIn.ADV7393_CONFIG) {
       const dataObject = Object.fromEntries(m.data.entries())
       setValues(dataObject)
+    } else if (m.type === DataTypeIn.ADV7393_CHANGESET) {
+      setUpdatedRegisters(m.data)
     }
   }, [])
 
@@ -83,6 +89,23 @@ export const RegisterConfigurator = () => {
             onClick={() => sendMessage(pushAdv7393Config(values))}
           >
             Push config
+          </Button>
+          <Button
+            onClick={() => {
+              navigator.clipboard.writeText(
+                [
+                  '/* Auto-generated configuration */',
+                  ...Object.entries(values).map(([key, value]) => {
+                    const reg = `0x${parseInt(key, 10).toString(16).padStart(2, '0')}`
+                    const val = `0x${value.toString(16).padStart(2, '0')}`
+                    return `ADV7393_writeReg(${reg}, ${val});`
+                  }),
+                  '/* Auto-generated configuration */',
+                ].join('\n')
+              )
+            }}
+          >
+            Copy config
           </Button>
           <Checkbox
             disabled={disabled}
@@ -128,6 +151,7 @@ export const RegisterConfigurator = () => {
         return (
           <RegisterItem
             key={register.address}
+            updatedRegisters={updatedRegisters}
             register={register}
             value={values[register.address]}
             onRegisterChange={handleRegisterChange}

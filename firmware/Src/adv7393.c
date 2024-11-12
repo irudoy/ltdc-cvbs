@@ -36,7 +36,7 @@ void adv7393_init(I2C_HandleTypeDef *h) {
    * b6 - SD pixel data valid
    * b7 - SD active video edge control
    */
-  ADV7393_writeReg(ADV7393_SD_MODE_REG_2, MB(MB(MB(ADV7393_SD_MODE_REG_2_RST, 0b1, 4, 1), 0b1, 6, 1), 0b1, 7, 1));
+  ADV7393_writeReg(ADV7393_SD_MODE_REG_2, MB(MB(MB(ADV7393_SD_MODE_REG_2_RST, 0b0, 3, 1), 0b1, 4, 1), 0b1, 6, 1));
 
   /**
    * b0 - SD SFL/SCR/TR mode select
@@ -47,8 +47,7 @@ void adv7393_init(I2C_HandleTypeDef *h) {
    * b6 - SD color bars
    * b7 - SD luma/chroma swap
    */
-  ADV7393_writeReg(ADV7393_SD_MODE_REG_4,
-                   COLOR_BARS == 1 ? MB(ADV7393_SD_MODE_REG_4_RST, 0b1, 6, 1) : ADV7393_SD_MODE_REG_4_RST);
+  ADV7393_writeReg(ADV7393_SD_MODE_REG_4, MB(ADV7393_SD_MODE_REG_4_RST, 0b1, 3, 1));
 
   /**
    * b[0:1] - NTSC color subcarrier adjust
@@ -92,6 +91,21 @@ void adv7393_init(I2C_HandleTypeDef *h) {
    * b7 - SD timing reset
    */
   ADV7393_writeReg(ADV7393_SD_TIMING_REG_0, MB(ADV7393_SD_TIMING_REG_0_RST, 0b10, 1, 2));
+
+  // Generated
+  ADV7393_writeReg(0x00, 0x12);
+  ADV7393_writeReg(0x01, 0x00);
+  ADV7393_writeReg(0x02, 0x20);
+  ADV7393_writeReg(0x80, 0x10);
+  ADV7393_writeReg(0x82, 0x53);
+  ADV7393_writeReg(0x83, 0x04);
+  ADV7393_writeReg(0x84, 0x08);
+  ADV7393_writeReg(0x86, 0x02);
+  ADV7393_writeReg(0x87, 0x80);
+  ADV7393_writeReg(0x88, 0x12);
+  ADV7393_writeReg(0x89, 0x01);
+  ADV7393_writeReg(0x8a, 0x0c);
+  ADV7393_writeReg(0x8b, 0x00);
 }
 
 uint32_t ADV7393_readFsc(void) {

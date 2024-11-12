@@ -2,12 +2,12 @@
 #include "disp.h"
 
 #include "philips_pm5544_320_240.h"
-//#include "smpte_color_bars_320_240.h"
-//#include "screen_mfd_single_317_186.h"
-//#include "screen_mfd_multi_317_185.h"
-//#include "picture.h"
+#include "smpte_color_bars_320_240.h"
+#include "screen_mfd_single_317_186.h"
+#include "screen_mfd_multi_317_185.h"
+#include "picture.h"
 
-#define SCREEN_INIT 6
+#define SCREEN_INIT 0
 #define SCREEN_MAX 12
 
 static RNG_HandleTypeDef *rngHandle;
@@ -17,10 +17,10 @@ static uint8_t nextScreen = SCREEN_INIT;
 void DEBUG_SCREEN_init(RNG_HandleTypeDef *h) {
   rngHandle = h;
   init_philips_pm5544_320_240();
-//  init_smpte_color_bars_320_240();
-//  init_screen_mfd_single_317x186();
-//  init_screen_mfd_multi_317_185();
-//  init_fox_240x320();
+  init_smpte_color_bars_320_240();
+  init_screen_mfd_single_317x186();
+  init_screen_mfd_multi_317_185();
+  init_fox_240x320();
 }
 
 void DEBUG_SCREEN_tick() {
@@ -51,28 +51,28 @@ void DEBUG_SCREEN_tick() {
         break;
       }
       case 6: {
-        DISP_FillScreen(DISP_COLOR_BLACK);
+        DISP_FillScreen(DISP_COLOR_BLUE);
         DISP_DrawBitmap(get_philips_pm5544_320_240(), 320, 240, 0, 1);
         break;
       }
       case 7: {
-        DISP_FillScreen(DISP_COLOR_BLACK);
-//        DISP_DrawBitmap(get_smpte_color_bars_320_240(), 320, 240, 0, 1);
+        DISP_FillScreen(DISP_COLOR_RED);
+        DISP_DrawBitmap(get_smpte_color_bars_320_240(), 320, 240, 0, 1);
         break;
       }
       case 8: {
         DISP_FillScreen(DISP_COLOR_BLACK);
-//        DISP_DrawBitmap(get_screen_mfd_single_317x186(), 317, 186, 0, 1);
+        DISP_DrawBitmap(get_screen_mfd_single_317x186(), 317, 186, 0, 1);
         break;
       }
       case 9: {
         DISP_FillScreen(DISP_COLOR_BLACK);
-//        DISP_DrawBitmap(get_screen_mfd_multi_317_185(), 317, 185, 0, 1);
+        DISP_DrawBitmap(get_screen_mfd_multi_317_185(), 317, 185, 0, 1);
         break;
       }
       case 10: {
-        DISP_FillScreen(DISP_COLOR_BLACK);
-//        DISP_DrawBitmap(get_fox_240x320(), 240, 320, 1, 0);
+        DISP_FillScreen(DISP_COLOR_RED);
+        DISP_DrawBitmap(get_fox_240x320(), 240, 320, 1, 0);
         break;
       }
       case 11: {
@@ -116,4 +116,9 @@ void DEBUG_SCREEN_next(void) {
   } else {
     nextScreen++;
   }
+}
+
+void DEBUG_SCREEN_reInit(void) {
+  nextScreen = currentScreen;
+  currentScreen = 0xFF;
 }

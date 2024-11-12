@@ -9,6 +9,8 @@ static uint8_t rxBuffer[PACKET_SIZE];
 static uint8_t txBuffer[PACKET_SIZE];
 static UART_HandleTypeDef *uartHandle;
 
+static uint8_t rxDataReady = 0;
+
 enum CommandOut {
   NEXT_SCREEN = 0xc1,
   PREV_SCREEN = 0xc2,
@@ -24,6 +26,7 @@ enum DataTypeIn {
   LTDC_CONFIG = 0xf1,
   LTDC_CLK_CONFIG = 0xf2,
   ADV7393_CONFIG = 0xf3,
+  ADV7393_CHANGESET = 0xf4,
 };
 
 void API_Init(UART_HandleTypeDef *huart) {
@@ -116,26 +119,29 @@ static void API_parsePacket() {
     }
     case GET_CLK_CONFIG: {
       DISP_LTDC_ClockConfigTypeDef cfg = DISP_Get_Clock_Config();
-
-      uint8_t data[14] = {
-          LTDC_CLK_CONFIG,
-          12,
-      };
-
+      uint8_t values = 5;
+      uint8_t size = values * 4;
       uint32_t *cfg_values[] = {
+          &cfg.OSCSourceValue,
+          &cfg.PLLM,
           &cfg.PLLSAIN,
           &cfg.PLLSAIR,
           &cfg.PLLSAIDivR,
       };
 
-      for (int i = 0; i < 3; i++) {
+      uint8_t data[PACKET_SIZE] = {
+          LTDC_CLK_CONFIG,
+          size,
+      };
+
+      for (int i = 0; i < values; i++) {
         data[2 + i * 4] = (uint8_t) (*cfg_values[i] & 0xFF);
         data[3 + i * 4] = (uint8_t) ((*cfg_values[i] >> 8) & 0xFF);
         data[4 + i * 4] = (uint8_t) ((*cfg_values[i] >> 16) & 0xFF);
         data[5 + i * 4] = (uint8_t) ((*cfg_values[i] >> 24) & 0xFF);
       }
 
-      API_transmit(data, 14);
+      API_transmit(data, size + 2);
       break;
     }
     case PUSH_CLK_CONFIG: {
@@ -181,19 +187,42 @@ static void API_parsePacket() {
       break;
     }
     case PUSH_ADV7393_CONFIG: {
+      uint8_t data[PACKET_SIZE] = {
+          ADV7393_CHANGESET,
+      };
+
+      uint8_t size = 0;
+
       for (uint8_t i = 0; i < payloadSize / 2; i++) {
         uint8_t reg = rxBuffer[2 + i * 2];
-//        volatile uint8_t currValue = ADV7393_readReg(reg);
+        uint8_t currValue = ADV7393_readReg(reg);
         uint8_t newValue = rxBuffer[3 + i * 2];
-//        if (newValue != currValue) {
-//          HAL_Delay(1);
-//        }
-        ADV7393_writeReg(reg, newValue);
+        if (newValue != currValue) {
+          data[2 + size] = reg;
+          ADV7393_writeReg(reg, newValue);
+          size++;
+        }
       }
+
+      data[1] = size;
+
+      API_transmit(data, size + 2);
       break;
     }
     default:
       break;
+  }
+}
+
+void API_Tick(void) {
+  if (rxDataReady) {
+    API_parsePacket();
+    rxDataReady = 0;
+    // __HAL_UART_CLEAR_OREFLAG(uartHandle);
+    HAL_StatusTypeDef status = HAL_UART_Receive_IT(uartHandle, rxBuffer, PACKET_SIZE);
+    if (status != HAL_OK) {
+      Error_Handler();
+    }
   }
 }
 
@@ -202,6 +231,5 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     return;
   }
 
-  API_parsePacket();
-  HAL_UART_Receive_IT(uartHandle, rxBuffer, PACKET_SIZE);
+  rxDataReady = 1;
 }

@@ -4,6 +4,7 @@
 #include "adv7393.h"
 #include "sdram.h"
 #include "ili9341_mod.h"
+#include "debug_screen.h"
 
 #define FRAME_BUFFER_ADDR SDRAM_BANK_ADDR
 
@@ -20,13 +21,26 @@ void DISP_FillScreen(uint16_t color) {
 }
 
 void DISP_FillRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) {
-  uint32_t xpos, ypos;
   if (x1 > x2) swap(x1, x2);
   if (y1 > y2) swap(y1, y2);
-  for (ypos = y1; ypos <= y2; ypos++) {
-    for (xpos = x1; xpos <= x2; xpos++) {
-      *(__IO uint16_t *) (ltdc->LayerCfg[0].FBStartAdress +
-                          (2 * (ypos * ltdc->LayerCfg[0].ImageWidth + xpos))) = DISP_SwapRedBlue((uint16_t) color);
+
+  uint16_t screenWidth = ltdc->LayerCfg[0].ImageWidth;
+  uint16_t screenHeight = ltdc->LayerCfg[0].ImageHeight;
+
+  if (x1 >= screenWidth) x1 = screenWidth - 1;
+  if (x2 >= screenWidth) x2 = screenWidth - 1;
+  if (y1 >= screenHeight) y1 = screenHeight - 1;
+  if (y2 >= screenHeight) y2 = screenHeight - 1;
+
+  uint16_t swappedColor = DISP_SwapRedBlue(color);
+  uint32_t startAddr = ltdc->LayerCfg[0].FBStartAdress;
+  uint32_t imgWidth = ltdc->LayerCfg[0].ImageWidth;
+
+  for (uint32_t ypos = y1; ypos <= y2; ypos++) {
+    uint32_t rowAddr = startAddr + (2 * ypos * imgWidth) + (2 * x1);
+    for (uint32_t xpos = x1; xpos <= x2; xpos++) {
+      *(__IO uint16_t *)(rowAddr) = swappedColor;
+      rowAddr += 2;
     }
   }
 }
@@ -166,8 +180,7 @@ static void DISP_updateFsc() {
   ADV7393_writeFsc(newFsc);
 }
 
-void
-DISP_init(SDRAM_HandleTypeDef *hsdram, LTDC_HandleTypeDef *hltdc, SPI_HandleTypeDef *hspi, I2C_HandleTypeDef *hi2c) {
+void DISP_init(SDRAM_HandleTypeDef *hsdram, LTDC_HandleTypeDef *hltdc, SPI_HandleTypeDef *hspi, I2C_HandleTypeDef *hi2c) {
   ltdc = hltdc;
 
   IS42S16400J_Init(hsdram);
@@ -215,6 +228,7 @@ void DISP_reInit(DISP_LTDC_ConfigTypeDef *newCfg) {
   HAL_LTDC_SetAddress(ltdc, FRAME_BUFFER_ADDR, LTDC_LAYER_1);
 
   DISP_updateFsc();
+  DEBUG_SCREEN_reInit();
 }
 
 void DISP_Set_Clock_Config(DISP_LTDC_ClockConfigTypeDef *cfg) {
@@ -233,6 +247,8 @@ void DISP_Set_Clock_Config(DISP_LTDC_ClockConfigTypeDef *cfg) {
 
 DISP_LTDC_ClockConfigTypeDef DISP_Get_Clock_Config(void) {
   DISP_LTDC_ClockConfigTypeDef cfg = {
+      .OSCSourceValue = __HAL_RCC_GET_PLL_OSCSOURCE() == RCC_PLLSOURCE_HSE ? HSE_VALUE : HSI_VALUE,
+      .PLLM = (RCC->PLLCFGR & RCC_PLLCFGR_PLLM) >> RCC_PLLCFGR_PLLM_Pos,
       .PLLSAIN = (RCC->PLLSAICFGR & RCC_PLLSAICFGR_PLLSAIN) >> RCC_PLLSAICFGR_PLLSAIN_Pos,
       .PLLSAIR = (RCC->PLLSAICFGR & RCC_PLLSAICFGR_PLLSAIR) >> RCC_PLLSAICFGR_PLLSAIR_Pos,
       .PLLSAIDivR = (RCC->DCKCFGR & RCC_DCKCFGR_PLLSAIDIVR) >> RCC_DCKCFGR_PLLSAIDIVR_Pos,

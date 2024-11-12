@@ -235,161 +235,161 @@ export const configRegisters: (Register | RegisterGroup)[] = [
   // 0x08 ED/HD CSC Matrix 5
   // 0x09 ED/HD CSC Matrix 6
 
-  {
-    address: 0x0b,
-    name: 'DAC 1, DAC 2, DAC 3 output levels',
-    resetValue: 0x00,
-    fields: [
-      {
-        name: 'Gain',
-        description:
-          '0-64 - positive gain: 0[+0%]; 64[+7.5%]; 192-255 - negative gain: 192[-7.5%]; 255[-0.018%];',
-        bitStart: 0,
-        bitEnd: 7,
-        type: 'int',
-      },
-    ],
-  },
-  {
-    address: 0x0d,
-    name: 'DAC power mode',
-    resetValue: 0x00,
-    fields: [
-      {
-        name: 'DAC 1 low power mode',
-        bitStart: 0,
-        bitEnd: 0,
-        type: 'boolean',
-        booleanDescription: {
-          true: 'Enabled',
-          false: 'Disabled',
-        },
-      },
-      {
-        name: 'DAC 2 low power mode',
-        bitStart: 1,
-        bitEnd: 1,
-        type: 'boolean',
-        booleanDescription: {
-          true: 'Enabled',
-          false: 'Disabled',
-        },
-      },
-      {
-        name: 'DAC 3 low power mode',
-        bitStart: 2,
-        bitEnd: 2,
-        type: 'boolean',
-        booleanDescription: {
-          true: 'Enabled',
-          false: 'Disabled',
-        },
-      },
-      {
-        name: 'SD/ED oversample rate select',
-        bitStart: 3,
-        bitEnd: 3,
-        type: 'boolean',
-        booleanDescription: {
-          true: 'SD = 8x, ED = 4x',
-          false: 'SD = 16x, ED = 8x',
-        },
-      },
-      {
-        name: 'Reserved',
-        bitStart: 4,
-        bitEnd: 4,
-        type: 'boolean',
-      },
-      {
-        name: 'Reserved',
-        bitStart: 5,
-        bitEnd: 5,
-        type: 'boolean',
-      },
-      {
-        name: 'Reserved',
-        bitStart: 6,
-        bitEnd: 6,
-        type: 'boolean',
-      },
-      {
-        name: 'Reserved',
-        bitStart: 7,
-        bitEnd: 7,
-        type: 'boolean',
-      },
-    ],
-  },
-  {
-    address: 0x10,
-    name: 'Cable detection',
-    resetValue: 0x00,
-    fields: [
-      {
-        name: 'DAC 1 cable detect',
-        bitStart: 0,
-        bitEnd: 0,
-        type: 'boolean',
-        booleanDescription: {
-          true: 'DAC 1 unconnected',
-          false: 'Cable detected on DAC 1',
-        },
-        readonly: true,
-      },
-      {
-        name: 'DAC 2 cable detect',
-        bitStart: 1,
-        bitEnd: 1,
-        type: 'boolean',
-        booleanDescription: {
-          true: 'DAC 2 unconnected',
-          false: 'Cable detected on DAC 2',
-        },
-        readonly: true,
-      },
-      {
-        name: 'Reserved',
-        bitStart: 2,
-        bitEnd: 2,
-        type: 'boolean',
-      },
-      {
-        name: 'Reserved',
-        bitStart: 3,
-        bitEnd: 3,
-        type: 'boolean',
-      },
-      {
-        name: 'Unconnected DAC autopower-down',
-        bitStart: 4,
-        bitEnd: 4,
-        type: 'boolean',
-        booleanDescription: {
-          true: 'DAC autopower-down enable',
-          false: 'DAC autopower-down disable',
-        },
-      },
-      {
-        name: 'Reserved',
-        bitStart: 5,
-        bitEnd: 5,
-        type: 'boolean',
-      },
-      {
-        name: 'Reserved',
-        bitStart: 6,
-        bitEnd: 6,
-        type: 'boolean',
-      },
-      {
-        name: 'Reserved',
-        bitStart: 7,
-        bitEnd: 7,
-        type: 'boolean',
-      },
-    ],
-  },
+  // {
+  //   address: 0x0b,
+  //   name: 'DAC 1, DAC 2, DAC 3 output levels',
+  //   resetValue: 0x00,
+  //   fields: [
+  //     {
+  //       name: 'Gain',
+  //       description:
+  //         '0-64 - positive gain: 0[+0%]; 64[+7.5%]; 192-255 - negative gain: 192[-7.5%]; 255[-0.018%];',
+  //       bitStart: 0,
+  //       bitEnd: 7,
+  //       type: 'int',
+  //     },
+  //   ],
+  // },
+  // {
+  //   address: 0x0d,
+  //   name: 'DAC power mode',
+  //   resetValue: 0x00,
+  //   fields: [
+  //     {
+  //       name: 'DAC 1 low power mode',
+  //       bitStart: 0,
+  //       bitEnd: 0,
+  //       type: 'boolean',
+  //       booleanDescription: {
+  //         true: 'Enabled',
+  //         false: 'Disabled',
+  //       },
+  //     },
+  //     {
+  //       name: 'DAC 2 low power mode',
+  //       bitStart: 1,
+  //       bitEnd: 1,
+  //       type: 'boolean',
+  //       booleanDescription: {
+  //         true: 'Enabled',
+  //         false: 'Disabled',
+  //       },
+  //     },
+  //     {
+  //       name: 'DAC 3 low power mode',
+  //       bitStart: 2,
+  //       bitEnd: 2,
+  //       type: 'boolean',
+  //       booleanDescription: {
+  //         true: 'Enabled',
+  //         false: 'Disabled',
+  //       },
+  //     },
+  //     {
+  //       name: 'SD/ED oversample rate select',
+  //       bitStart: 3,
+  //       bitEnd: 3,
+  //       type: 'boolean',
+  //       booleanDescription: {
+  //         true: 'SD = 8x, ED = 4x',
+  //         false: 'SD = 16x, ED = 8x',
+  //       },
+  //     },
+  //     {
+  //       name: 'Reserved',
+  //       bitStart: 4,
+  //       bitEnd: 4,
+  //       type: 'boolean',
+  //     },
+  //     {
+  //       name: 'Reserved',
+  //       bitStart: 5,
+  //       bitEnd: 5,
+  //       type: 'boolean',
+  //     },
+  //     {
+  //       name: 'Reserved',
+  //       bitStart: 6,
+  //       bitEnd: 6,
+  //       type: 'boolean',
+  //     },
+  //     {
+  //       name: 'Reserved',
+  //       bitStart: 7,
+  //       bitEnd: 7,
+  //       type: 'boolean',
+  //     },
+  //   ],
+  // },
+  // {
+  //   address: 0x10,
+  //   name: 'Cable detection',
+  //   resetValue: 0x00,
+  //   fields: [
+  //     {
+  //       name: 'DAC 1 cable detect',
+  //       bitStart: 0,
+  //       bitEnd: 0,
+  //       type: 'boolean',
+  //       booleanDescription: {
+  //         true: 'DAC 1 unconnected',
+  //         false: 'Cable detected on DAC 1',
+  //       },
+  //       readonly: true,
+  //     },
+  //     {
+  //       name: 'DAC 2 cable detect',
+  //       bitStart: 1,
+  //       bitEnd: 1,
+  //       type: 'boolean',
+  //       booleanDescription: {
+  //         true: 'DAC 2 unconnected',
+  //         false: 'Cable detected on DAC 2',
+  //       },
+  //       readonly: true,
+  //     },
+  //     {
+  //       name: 'Reserved',
+  //       bitStart: 2,
+  //       bitEnd: 2,
+  //       type: 'boolean',
+  //     },
+  //     {
+  //       name: 'Reserved',
+  //       bitStart: 3,
+  //       bitEnd: 3,
+  //       type: 'boolean',
+  //     },
+  //     {
+  //       name: 'Unconnected DAC autopower-down',
+  //       bitStart: 4,
+  //       bitEnd: 4,
+  //       type: 'boolean',
+  //       booleanDescription: {
+  //         true: 'DAC autopower-down enable',
+  //         false: 'DAC autopower-down disable',
+  //       },
+  //     },
+  //     {
+  //       name: 'Reserved',
+  //       bitStart: 5,
+  //       bitEnd: 5,
+  //       type: 'boolean',
+  //     },
+  //     {
+  //       name: 'Reserved',
+  //       bitStart: 6,
+  //       bitEnd: 6,
+  //       type: 'boolean',
+  //     },
+  //     {
+  //       name: 'Reserved',
+  //       bitStart: 7,
+  //       bitEnd: 7,
+  //       type: 'boolean',
+  //     },
+  //   ],
+  // },
 
   // 0x13 Pixel Port Readback A (1)
   // 0x14 Pixel Port Readback B (1)
@@ -1113,174 +1113,174 @@ export const configRegisters: (Register | RegisterGroup)[] = [
       },
     ],
   },
-  {
-    type: 'group',
-    id: 'sd_fsc',
-    name: 'SD Subcarrier Frequency',
-    description: 'SD Subcarrier Frequency Combined',
-  },
-  {
-    address: 0x8c,
-    name: 'SD Fsc Register 0',
-    description: 'Subcarrier Frequency Bits[7:0]',
-    group: 'sd_fsc',
-    resetValue: 0x1f,
-    fields: [
-      {
-        name: 'Frequency Value',
-        description: 'Subcarrier Frequency Bits[7:0]',
-        bitStart: 0,
-        bitEnd: 7,
-        type: 'hex',
-      },
-    ],
-  },
-  {
-    address: 0x8d,
-    name: 'SD Fsc Register 1',
-    description: 'Subcarrier Frequency Bits[15:8]',
-    group: 'sd_fsc',
-    resetValue: 0x7c,
-    fields: [
-      {
-        name: 'Frequency Value',
-        description: 'Subcarrier Frequency Bits[15:8]',
-        bitStart: 0,
-        bitEnd: 7,
-        type: 'hex',
-      },
-    ],
-  },
-  {
-    address: 0x8e,
-    name: 'SD Fsc Register 2',
-    description: 'Subcarrier Frequency Bits[23:16]',
-    group: 'sd_fsc',
-    resetValue: 0xf0,
-    fields: [
-      {
-        name: 'Frequency Value',
-        description: 'Subcarrier Frequency Bits[23:16]',
-        bitStart: 0,
-        bitEnd: 7,
-        type: 'hex',
-      },
-    ],
-  },
-  {
-    address: 0x8f,
-    name: 'SD Fsc Register 3',
-    description: 'Subcarrier Frequency Bits[31:24]',
-    group: 'sd_fsc',
-    resetValue: 0x21,
-    fields: [
-      {
-        name: 'Frequency Value',
-        description: 'Subcarrier Frequency Bits[31:24]',
-        bitStart: 0,
-        bitEnd: 7,
-        type: 'hex',
-      },
-    ],
-  },
-  {
-    address: 0x90,
-    name: 'SD Fsc Phase',
-    description: 'Subcarrier Phase Bits[9:2]',
-    resetValue: 0x00,
-    fields: [
-      {
-        name: 'Subcarrier Phase Bits[9:2]',
-        bitStart: 0,
-        bitEnd: 7,
-        type: 'hex',
-      },
-    ],
-  },
-  {
-    address: 0x91,
-    name: 'SD Closed Captioning',
-    description: 'Extended data on even fields',
-    resetValue: 0x00,
-    fields: [
-      {
-        name: 'Extended Data Bits[7:0]',
-        bitStart: 0,
-        bitEnd: 7,
-        type: 'hex',
-      },
-    ],
-  },
-  {
-    address: 0x92,
-    name: 'SD Closed Captioning',
-    description: 'Extended data on even fields',
-    resetValue: 0x00,
-    fields: [
-      {
-        name: 'Extended Data Bits[15:8]',
-        bitStart: 0,
-        bitEnd: 7,
-        type: 'hex',
-      },
-    ],
-  },
-  {
-    address: 0x93,
-    name: 'SD Closed Captioning',
-    description: 'Data on odd fields',
-    resetValue: 0x00,
-    fields: [
-      {
-        name: 'Data Bits[7:0]',
-        bitStart: 0,
-        bitEnd: 7,
-        type: 'hex',
-      },
-    ],
-  },
-  {
-    address: 0x94,
-    name: 'SD Closed Captioning',
-    description: 'Data on odd fields',
-    resetValue: 0x00,
-    fields: [
-      {
-        name: 'Data Bits[15:8]',
-        bitStart: 0,
-        bitEnd: 7,
-        type: 'hex',
-      },
-    ],
-  },
-  {
-    address: 0x95,
-    name: 'SD Pedestal Register 0',
-    description: 'Pedestal on odd fields',
-    resetValue: 0x00,
-    fields: makePedestalFields(10),
-  },
-  {
-    address: 0x96,
-    name: 'SD Pedestal Register 0',
-    description: 'Pedestal on odd fields',
-    resetValue: 0x00,
-    fields: makePedestalFields(18),
-  },
-  {
-    address: 0x97,
-    name: 'SD Pedestal Register 0',
-    description: 'Pedestal on even fields',
-    resetValue: 0x00,
-    fields: makePedestalFields(18),
-  },
-  {
-    address: 0x98,
-    name: 'SD Pedestal Register 0',
-    description: 'Pedestal on even fields',
-    resetValue: 0x00,
-    fields: makePedestalFields(18),
-  },
+  // {
+  //   type: 'group',
+  //   id: 'sd_fsc',
+  //   name: 'SD Subcarrier Frequency',
+  //   description: 'SD Subcarrier Frequency Combined',
+  // },
+  // {
+  //   address: 0x8c,
+  //   name: 'SD Fsc Register 0',
+  //   description: 'Subcarrier Frequency Bits[7:0]',
+  //   group: 'sd_fsc',
+  //   resetValue: 0x1f,
+  //   fields: [
+  //     {
+  //       name: 'Frequency Value',
+  //       description: 'Subcarrier Frequency Bits[7:0]',
+  //       bitStart: 0,
+  //       bitEnd: 7,
+  //       type: 'hex',
+  //     },
+  //   ],
+  // },
+  // {
+  //   address: 0x8d,
+  //   name: 'SD Fsc Register 1',
+  //   description: 'Subcarrier Frequency Bits[15:8]',
+  //   group: 'sd_fsc',
+  //   resetValue: 0x7c,
+  //   fields: [
+  //     {
+  //       name: 'Frequency Value',
+  //       description: 'Subcarrier Frequency Bits[15:8]',
+  //       bitStart: 0,
+  //       bitEnd: 7,
+  //       type: 'hex',
+  //     },
+  //   ],
+  // },
+  // {
+  //   address: 0x8e,
+  //   name: 'SD Fsc Register 2',
+  //   description: 'Subcarrier Frequency Bits[23:16]',
+  //   group: 'sd_fsc',
+  //   resetValue: 0xf0,
+  //   fields: [
+  //     {
+  //       name: 'Frequency Value',
+  //       description: 'Subcarrier Frequency Bits[23:16]',
+  //       bitStart: 0,
+  //       bitEnd: 7,
+  //       type: 'hex',
+  //     },
+  //   ],
+  // },
+  // {
+  //   address: 0x8f,
+  //   name: 'SD Fsc Register 3',
+  //   description: 'Subcarrier Frequency Bits[31:24]',
+  //   group: 'sd_fsc',
+  //   resetValue: 0x21,
+  //   fields: [
+  //     {
+  //       name: 'Frequency Value',
+  //       description: 'Subcarrier Frequency Bits[31:24]',
+  //       bitStart: 0,
+  //       bitEnd: 7,
+  //       type: 'hex',
+  //     },
+  //   ],
+  // },
+  // {
+  //   address: 0x90,
+  //   name: 'SD Fsc Phase',
+  //   description: 'Subcarrier Phase Bits[9:2]',
+  //   resetValue: 0x00,
+  //   fields: [
+  //     {
+  //       name: 'Subcarrier Phase Bits[9:2]',
+  //       bitStart: 0,
+  //       bitEnd: 7,
+  //       type: 'hex',
+  //     },
+  //   ],
+  // },
+  // {
+  //   address: 0x91,
+  //   name: 'SD Closed Captioning',
+  //   description: 'Extended data on even fields',
+  //   resetValue: 0x00,
+  //   fields: [
+  //     {
+  //       name: 'Extended Data Bits[7:0]',
+  //       bitStart: 0,
+  //       bitEnd: 7,
+  //       type: 'hex',
+  //     },
+  //   ],
+  // },
+  // {
+  //   address: 0x92,
+  //   name: 'SD Closed Captioning',
+  //   description: 'Extended data on even fields',
+  //   resetValue: 0x00,
+  //   fields: [
+  //     {
+  //       name: 'Extended Data Bits[15:8]',
+  //       bitStart: 0,
+  //       bitEnd: 7,
+  //       type: 'hex',
+  //     },
+  //   ],
+  // },
+  // {
+  //   address: 0x93,
+  //   name: 'SD Closed Captioning',
+  //   description: 'Data on odd fields',
+  //   resetValue: 0x00,
+  //   fields: [
+  //     {
+  //       name: 'Data Bits[7:0]',
+  //       bitStart: 0,
+  //       bitEnd: 7,
+  //       type: 'hex',
+  //     },
+  //   ],
+  // },
+  // {
+  //   address: 0x94,
+  //   name: 'SD Closed Captioning',
+  //   description: 'Data on odd fields',
+  //   resetValue: 0x00,
+  //   fields: [
+  //     {
+  //       name: 'Data Bits[15:8]',
+  //       bitStart: 0,
+  //       bitEnd: 7,
+  //       type: 'hex',
+  //     },
+  //   ],
+  // },
+  // {
+  //   address: 0x95,
+  //   name: 'SD Pedestal Register 0',
+  //   description: 'Pedestal on odd fields',
+  //   resetValue: 0x00,
+  //   fields: makePedestalFields(10),
+  // },
+  // {
+  //   address: 0x96,
+  //   name: 'SD Pedestal Register 0',
+  //   description: 'Pedestal on odd fields',
+  //   resetValue: 0x00,
+  //   fields: makePedestalFields(18),
+  // },
+  // {
+  //   address: 0x97,
+  //   name: 'SD Pedestal Register 0',
+  //   description: 'Pedestal on even fields',
+  //   resetValue: 0x00,
+  //   fields: makePedestalFields(18),
+  // },
+  // {
+  //   address: 0x98,
+  //   name: 'SD Pedestal Register 0',
+  //   description: 'Pedestal on even fields',
+  //   resetValue: 0x00,
+  //   fields: makePedestalFields(18),
+  // },
   // 0x99 SD CGMS/WSS 0
   // 0x9A SD CGMS/WSS 1
   // 0x9B SD CGMS/WSS 2

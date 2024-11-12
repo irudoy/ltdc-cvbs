@@ -1,4 +1,4 @@
-import type { ConfigState, ClkState } from './types'
+import type { LTDCConfigState, ClkConfigState } from './types'
 
 const MESSAGE_SIZE = 64
 
@@ -24,6 +24,7 @@ export enum DataTypeIn {
   LTDC_CONFIG = 0xf1,
   LTDC_CLK_CONFIG = 0xf2,
   ADV7393_CONFIG = 0xf3,
+  ADV7393_CHANGESET = 0xf4,
 }
 
 type MessageLTDCConfig = {
@@ -42,6 +43,8 @@ type MessageLTDCConfig = {
 
 type MessageClkConfig = {
   type: DataTypeIn.LTDC_CLK_CONFIG
+  oscSourceValue: number
+  pllM: number
   pllSaiN: number
   pllSaiR: number
   pllSaiDivR: number
@@ -52,10 +55,16 @@ type MessageADV7393Config = {
   data: Map<number, number>
 }
 
+type MessageADV7393Changeset = {
+  type: DataTypeIn.ADV7393_CHANGESET
+  data: Set<number>
+}
+
 export type MessageInParsed =
   | MessageLTDCConfig
   | MessageClkConfig
   | MessageADV7393Config
+  | MessageADV7393Changeset
 
 function calcCrc(data: Uint8Array): number {
   let crc = 0
@@ -92,7 +101,7 @@ export function getAdv7393Config(registers: number[]): MessageOut {
   return createPacket(CommandOut.GET_ADV7393_CONFIG, new Uint8Array(registers))
 }
 
-export function pushLTDCConfig(s: ConfigState): MessageOut {
+export function pushLTDCConfig(s: LTDCConfigState): MessageOut {
   const horizontalSync = s.hSyncWidth - 1
   const verticalSync = s.vSyncHeight - 1
   const accumulatedHBP = s.hBackPorch + horizontalSync
@@ -121,7 +130,7 @@ export function pushLTDCConfig(s: ConfigState): MessageOut {
   return createPacket(CommandOut.PUSH_CONFIG, payload)
 }
 
-export function pushClkConfig(s: ClkState): MessageOut {
+export function pushClkConfig(s: ClkConfigState): MessageOut {
   const values = new Int32Array([s.pllSaiN, s.pllSaiR, s.pllSaiDivR])
   const payload: Uint8Array = new Uint8Array(12)
   payload.set(new Uint8Array(values.buffer))
@@ -171,7 +180,7 @@ export function createMessageReader(
 
 export function parsedMessageLTDCConfigToState(
   m: MessageLTDCConfig
-): ConfigState {
+): LTDCConfigState {
   return {
     hSyncWidth: m.horizontalSync + 1,
     vSyncHeight: m.verticalSync + 1,
@@ -216,9 +225,13 @@ export function parseMessageIn(m: MessageIn): MessageInParsed {
       }
     }
     case DataTypeIn.LTDC_CLK_CONFIG: {
-      const [pllSaiN, pllSaiR, pllSaiDivR] = new Int32Array(m.data.buffer)
+      const [oscSourceValue, pllM, pllSaiN, pllSaiR, pllSaiDivR] =
+        new Int32Array(m.data.buffer)
+
       return {
         type: DataTypeIn.LTDC_CLK_CONFIG,
+        oscSourceValue,
+        pllM,
         pllSaiN,
         pllSaiR,
         pllSaiDivR,
@@ -231,6 +244,14 @@ export function parseMessageIn(m: MessageIn): MessageInParsed {
       }
       console.log(m, data)
       return { type: DataTypeIn.ADV7393_CONFIG, data }
+    }
+    case DataTypeIn.ADV7393_CHANGESET: {
+      const data = new Set<number>()
+      for (let i = 0; i < m.size; i += 2) {
+        data.add(m.data[i])
+      }
+      console.log(m, data)
+      return { type: DataTypeIn.ADV7393_CHANGESET, data }
     }
     default:
       throw new Error(`Unknown message type ${m.type}`)

@@ -11,4 +11,6 @@ void DEBUG_SCREEN_prev(void);
 
 void DEBUG_SCREEN_next(void);
 
+void DEBUG_SCREEN_reInit(void);
+
 #endif //LTDC_0_DEBUG_SCREEN_H

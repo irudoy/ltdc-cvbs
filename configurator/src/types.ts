@@ -1,4 +1,4 @@
-export type ConfigState = {
+export type LTDCConfigState = {
   hSyncWidth: number
   hBackPorch: number
   hFrontPorch: number
@@ -10,17 +10,7 @@ export type ConfigState = {
   vFrontPorch: number
 }
 
-export type ClkState = {
-  pllSaiN: number
-  pllSaiR: number
-  pllSaiDivR: number
-}
-
-export type ConfigStateEnhanced = ConfigState & {
-  pixelClockMhz: number
-}
-
-export type ComputedState = {
+export type LTDCComputedState = {
   hSyncWidthComputed: number // hSyncWidth - 1
   accHBackPorch: number // hSyncWidth + hBackPorch - 1
   accActiveWidth: number // hSyncWidth + hBackPorch + activeWidth - 1
@@ -30,9 +20,20 @@ export type ComputedState = {
   accVBackPorch: number // vSyncHeight + vBackPorch - 1
   accActiveHeight: number // vSyncHeight + vBackPorch + activeHeight - 1
   totalHeight: number // vSyncHeight + vBackPorch + activeHeight + vFrontPorch - 1
-
-  frameRate: number
-  frameRate2: number
 }
 
-export type State = ConfigStateEnhanced & ComputedState
+export type LTDCState = LTDCConfigState & LTDCComputedState
+
+export type ClkConfigState = {
+  oscSourceValue: number
+  pllM: number
+  pllSaiN: number
+  pllSaiR: number
+  pllSaiDivR: number
+}
+
+export type ClkStateComputed = {
+  lcdTftClockFrequency: number
+}
+
+export type ClkState = ClkConfigState & ClkStateComputed

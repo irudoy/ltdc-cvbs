@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { State } from '../types'
+import type { LTDCState } from '../types'
 
 interface Section {
   x: number
@@ -19,7 +19,7 @@ const LABEL_OFFSET_X = OFFSET_X - 50
 const OFFSET_Y = 80
 const LABEL_OFFSET_Y = OFFSET_Y - 30
 
-export function FrameViz({ state }: { state: State }) {
+export function FrameViz({ state }: { state: LTDCState }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
