@@ -68,7 +68,8 @@ function useFrameRate(totalWidth: number, totalHeight: number) {
   return useMemo(() => {
     const frameRate =
       (lcdTftClockFrequency / (totalWidth + 1) / (totalHeight + 1)) * 1e6
-    return { frameRate, lcdTftClockFrequency }
+    const hsyncRate = (lcdTftClockFrequency / (totalWidth + 1)) * 1e3
+    return { frameRate, hsyncRate, lcdTftClockFrequency }
   }, [totalWidth, totalHeight, lcdTftClockFrequency])
 }
 
@@ -143,7 +144,7 @@ export function LtdcConfigurator() {
     deleteSet,
   } = useConfigState()
 
-  const { frameRate, lcdTftClockFrequency } = useFrameRate(
+  const { frameRate, hsyncRate, lcdTftClockFrequency } = useFrameRate(
     state.totalWidth,
     state.totalHeight
   )
@@ -214,7 +215,12 @@ export function LtdcConfigurator() {
             disabled
             value={lcdTftClockFrequency}
           />
-          <TimingsInput disabled label="FPS" value={frameRate.toFixed(4)} />
+          <TimingsInput
+            disabled
+            label="FPS (VS Hz)"
+            value={frameRate.toFixed(4)}
+          />
+          <TimingsInput disabled label="HS kHz" value={hsyncRate.toFixed(4)} />
         </div>
         <div>
           <TimingsInput
