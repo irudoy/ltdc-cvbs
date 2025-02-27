@@ -3,7 +3,7 @@
 
 #include "main.h"
 
-void DEBUG_SCREEN_init(RNG_HandleTypeDef *h);
+void DEBUG_SCREEN_init(RNG_HandleTypeDef *h, TIM_HandleTypeDef *ht);
 
 void DEBUG_SCREEN_tick(void);
 

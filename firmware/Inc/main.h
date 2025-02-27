@@ -96,6 +96,8 @@ void Error_Handler(void);
 #define B5_GPIO_Port GPIOA
 #define VSYNC_Pin GPIO_PIN_4
 #define VSYNC_GPIO_Port GPIOA
+#define NEC_IR_Pin GPIO_PIN_5
+#define NEC_IR_GPIO_Port GPIOA
 #define G2_Pin GPIO_PIN_6
 #define G2_GPIO_Port GPIOA
 #define ACP_RST_Pin GPIO_PIN_7
